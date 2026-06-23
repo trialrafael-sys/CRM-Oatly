@@ -9,16 +9,15 @@
 <style>
 :root {
   --bg:#0e0e0e; --surface:#161616; --surface2:#1e1e1e; --border:#2a2a2a;
-  --oatly:#f4e04a; --text:#f0efe9; --muted:#888;
+  --oatly:#f4e04a; --text:#f0efe9; --muted:#666;
   --won:#4ade80; --lead:#60a5fa;
-  --platinum:#e2e8f0; --gold:#f4e04a; --silver:#94a3b8; --bronze:#cd7f32; --whale:#a855f7;
   --font:'Georgia',serif; --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:14px;min-height:100vh}
 
 /* HEADER */
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
 .brand{display:flex;align-items:center;gap:12px}
 .pill{background:var(--oatly);color:#111;font-weight:800;font-size:12px;padding:4px 11px;border-radius:20px;letter-spacing:.04em;font-family:var(--font)}
 .htitle{font-size:15px;font-weight:600}
@@ -26,33 +25,64 @@ body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:14px
 .hcount{font-size:12px;color:var(--muted);background:var(--surface2);padding:5px 12px;border-radius:20px;border:1px solid var(--border)}
 #nShown{color:var(--oatly);font-weight:700}
 
-/* UPLOAD ZONE */
-#uploadZone {
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:calc(100vh - 60px);gap:20px;padding:40px;
-}
-.upload-box {
-  border:2px dashed var(--border);border-radius:16px;padding:60px 80px;
-  display:flex;flex-direction:column;align-items:center;gap:16px;
-  cursor:pointer;transition:all .2s;max-width:480px;width:100%;text-align:center;
-}
+/* UPLOAD */
+#uploadZone{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);gap:20px;padding:40px}
+.upload-box{border:2px dashed var(--border);border-radius:16px;padding:60px 80px;display:flex;flex-direction:column;align-items:center;gap:16px;cursor:pointer;transition:all .2s;max-width:480px;width:100%;text-align:center}
 .upload-box:hover,.upload-box.drag{border-color:var(--oatly);background:rgba(244,224,74,.04)}
 .upload-icon{font-size:48px;line-height:1}
-.upload-title{font-size:18px;font-weight:700;color:var(--text)}
+.upload-title{font-size:18px;font-weight:700}
 .upload-sub{font-size:13px;color:var(--muted);line-height:1.5}
 .upload-btn{background:var(--oatly);color:#111;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px}
 #fileInput{display:none}
-.upload-note{font-size:11px;color:var(--muted);text-align:center}
+.upload-note{font-size:11px;color:var(--muted)}
 
-/* MAIN DASHBOARD (hidden until data loads) */
+/* DASHBOARD */
 #dashboard{display:none;flex-direction:column}
 
-/* FILTERS */
-.filters-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
-.fg{display:flex;flex-direction:column;gap:3px}
-.fl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-select,input[type=text]{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:6px;font-size:12px;min-width:120px;outline:none;font-family:var(--ui)}
-select:focus,input:focus{border-color:var(--oatly)}
+/* ---- MULTI-SELECT DROPDOWN ---- */
+.filters-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;position:sticky;top:57px;z-index:100}
+.fg{display:flex;flex-direction:column;gap:3px;position:relative}
+.fl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:1px}
+
+/* The trigger button */
+.ms-trigger{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:5px 28px 5px 9px;border-radius:6px;font-size:12px;min-width:130px;
+  cursor:pointer;text-align:left;position:relative;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;font-family:var(--ui);
+  transition:border-color .15s;
+}
+.ms-trigger::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted)}
+.ms-trigger.active,.ms-trigger:hover{border-color:var(--oatly)}
+.ms-trigger.has-val{border-color:rgba(244,224,74,.5);color:var(--oatly)}
+
+/* Dropdown panel */
+.ms-panel{
+  display:none;position:absolute;top:calc(100% + 4px);left:0;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  min-width:180px;max-height:260px;overflow-y:auto;z-index:300;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.ms-panel.open{display:block}
+.ms-search{padding:8px;border-bottom:1px solid var(--border)}
+.ms-search input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:11px;outline:none}
+.ms-search input:focus{border-color:var(--oatly)}
+.ms-list{padding:4px 0}
+.ms-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px;transition:background .1s}
+.ms-item:hover{background:rgba(255,255,255,.05)}
+.ms-item input[type=checkbox]{accent-color:var(--oatly);width:13px;height:13px;flex-shrink:0;cursor:pointer}
+.ms-item label{cursor:pointer;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-item.select-all{border-bottom:1px solid var(--border);margin-bottom:4px;color:var(--muted);font-size:11px}
+.ms-empty{padding:12px;font-size:11px;color:var(--muted);text-align:center}
+
+/* plain text search */
+.ms-trigger-text{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:5px 9px;border-radius:6px;font-size:12px;min-width:160px;
+  outline:none;font-family:var(--ui);transition:border-color .15s;
+}
+.ms-trigger-text:focus{border-color:var(--oatly)}
+
 .btn-r{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
 .btn-r:hover{border-color:var(--oatly);color:var(--oatly)}
 .btn-reload{background:transparent;border:1px solid #333;color:var(--muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px}
@@ -60,8 +90,6 @@ select:focus,input:focus{border-color:var(--oatly)}
 
 /* MAIN */
 .main{padding:18px 28px;display:flex;flex-direction:column;gap:16px}
-
-/* KPIs */
 .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
 .kc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
 .kc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--oatly)}
@@ -69,24 +97,18 @@ select:focus,input:focus{border-color:var(--oatly)}
 .kv{font-size:22px;font-weight:700;font-family:var(--font);line-height:1}
 .ks{font-size:10px;color:var(--muted);margin-top:3px}
 .kc.acc .kv{color:var(--oatly)}
-
-/* CHARTS */
 .crow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .crow2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
 .cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
 .ct{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .ct em{color:var(--oatly);font-style:normal;font-size:9px;background:rgba(244,224,74,.1);padding:1px 6px;border-radius:8px}
 canvas{max-height:190px}
-
-/* BRAND BARS */
 .bbars{display:flex;flex-direction:column;gap:5px}
 .brow{display:flex;align-items:center;gap:8px}
 .bname{font-size:11px;width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bwrap{flex:1;background:var(--surface2);border-radius:3px;height:17px}
-.bbar{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;transition:width .4s}
+.bbar{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px}
 .bn{font-size:10px;font-weight:700}
-
-/* OWNER */
 .ogrid{display:flex;flex-direction:column;gap:7px}
 .ocard{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px}
 .oname{font-size:12px;font-weight:700;margin-bottom:4px}
@@ -95,8 +117,6 @@ canvas{max-height:190px}
 .ostat b{color:var(--text)}
 .obar{height:2px;background:var(--border);border-radius:1px;margin-top:6px}
 .ofill{height:2px;background:var(--oatly);border-radius:1px}
-
-/* TABLE */
 .tc{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .thead2{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .thead2 h3{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
@@ -138,12 +158,13 @@ tr:hover td{background:var(--surface2)}
   </div>
 </div>
 
-<!-- UPLOAD STATE -->
+<!-- UPLOAD -->
 <div id="uploadZone">
-  <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()"
-       ondragover="event.preventDefault();this.classList.add('drag')"
-       ondragleave="this.classList.remove('drag')"
-       ondrop="handleDrop(event)">
+  <div class="upload-box" id="dropZone"
+    onclick="document.getElementById('fileInput').click()"
+    ondragover="event.preventDefault();this.classList.add('drag')"
+    ondragleave="this.classList.remove('drag')"
+    ondrop="handleDrop(event)">
     <div class="upload-icon">📊</div>
     <div class="upload-title">Sube tu archivo de cuentas</div>
     <div class="upload-sub">Exporta el Excel desde monday.com y arrástralo aquí,<br>o haz click para seleccionarlo</div>
@@ -154,29 +175,23 @@ tr:hover td{background:var(--surface2)}
   <div id="uploadError" style="color:#f87171;font-size:12px;display:none"></div>
 </div>
 
-<!-- DASHBOARD (hidden) -->
+<!-- DASHBOARD -->
 <div id="dashboard">
-  <div class="filters-bar">
-    <div class="fg"><div class="fl">Buscar</div><input type="text" id="fs" placeholder="Nombre…" style="min-width:170px"></div>
-    <div class="fg"><div class="fl">Owner</div><select id="fo"><option value="">Todos</option></select></div>
-    <div class="fg"><div class="fl">Tier</div>
-      <select id="ft"><option value="">Todos</option><option>Platinum</option><option>Gold</option><option>Silver</option><option>Bronze</option><option>White Whale</option></select>
+  <div class="filters-bar" id="filtersBar">
+    <div class="fg">
+      <div class="fl">Buscar</div>
+      <input class="ms-trigger-text" type="text" id="fs" placeholder="Nombre de cuenta…">
     </div>
-    <div class="fg"><div class="fl">Status</div>
-      <select id="fst"><option value="">Todos</option><option>Won</option><option>Lead</option></select>
-    </div>
-    <div class="fg"><div class="fl">Tipo</div><select id="fty"><option value="">Todos</option></select></div>
-    <div class="fg"><div class="fl">Marca</div><select id="fb"><option value="">Todas</option></select></div>
-    <div class="fg"><div class="fl">Canal</div>
-      <select id="fac"><option value="">Todos</option><option>BMD</option><option>FOOD SERVICE</option></select>
-    </div>
-    <div class="fg"><div class="fl">Prioridad</div>
-      <select id="fp"><option value="">Todas</option><option value="1">★ Prio 1</option><option value="2">◆ Prio 2</option></select>
-    </div>
-    <div class="fg"><div class="fl">Litros</div>
-      <select id="fl2"><option value="">Todos</option><option value="yes">Con datos</option></select>
-    </div>
-    <button class="btn-r" onclick="resetF()">✕ Reset</button>
+    <!-- multi-selects injected by JS -->
+    <div class="fg" id="fg-owner"><div class="fl">Owner</div></div>
+    <div class="fg" id="fg-tier"><div class="fl">Tier</div></div>
+    <div class="fg" id="fg-status"><div class="fl">Status</div></div>
+    <div class="fg" id="fg-type"><div class="fl">Tipo</div></div>
+    <div class="fg" id="fg-brand"><div class="fl">Marca</div></div>
+    <div class="fg" id="fg-canal"><div class="fl">Canal</div></div>
+    <div class="fg" id="fg-prio"><div class="fl">Prioridad</div></div>
+    <div class="fg" id="fg-litros"><div class="fl">Litros</div></div>
+    <button class="btn-r" onclick="resetAll()">✕ Reset</button>
   </div>
 
   <div class="main">
@@ -225,66 +240,220 @@ tr:hover td{background:var(--surface2)}
 </div>
 
 <script>
+// =============================================
+// MULTI-SELECT COMPONENT
+// =============================================
+const msState = {}; // { filterId: Set of selected values }
+
+function createMultiSelect(containerId, filterId, placeholder, options, searchable=false) {
+  msState[filterId] = new Set();
+  const fg = document.getElementById(containerId);
+
+  const trigger = document.createElement('button');
+  trigger.className = 'ms-trigger';
+  trigger.id = 'trig-' + filterId;
+  trigger.textContent = placeholder;
+
+  const panel = document.createElement('div');
+  panel.className = 'ms-panel';
+  panel.id = 'panel-' + filterId;
+
+  // Optional search inside panel
+  if (searchable) {
+    const srchWrap = document.createElement('div');
+    srchWrap.className = 'ms-search';
+    const srchInput = document.createElement('input');
+    srchInput.type = 'text';
+    srchInput.placeholder = 'Buscar…';
+    srchInput.oninput = () => filterPanelItems(filterId, srchInput.value);
+    srchWrap.appendChild(srchInput);
+    panel.appendChild(srchWrap);
+  }
+
+  const list = document.createElement('div');
+  list.className = 'ms-list';
+  list.id = 'list-' + filterId;
+
+  // Select all
+  const allItem = document.createElement('div');
+  allItem.className = 'ms-item select-all';
+  allItem.innerHTML = `<input type="checkbox" id="chk-${filterId}-all" checked><label for="chk-${filterId}-all">Seleccionar todo</label>`;
+  allItem.querySelector('input').onchange = (e) => toggleAll(filterId, e.target.checked);
+  list.appendChild(allItem);
+
+  options.forEach(opt => addOptionToPanel(list, filterId, opt, placeholder));
+  panel.appendChild(list);
+
+  fg.appendChild(trigger);
+  fg.appendChild(panel);
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAllPanels(filterId);
+    panel.classList.toggle('open');
+    trigger.classList.toggle('active', panel.classList.contains('open'));
+  });
+
+  return { trigger, panel, list };
+}
+
+function addOptionToPanel(list, filterId, opt, placeholder) {
+  const item = document.createElement('div');
+  item.className = 'ms-item';
+  item.dataset.val = opt;
+  const id = `chk-${filterId}-${opt.replace(/[^a-z0-9]/gi,'_')}`;
+  item.innerHTML = `<input type="checkbox" id="${id}" value="${opt}" checked><label for="${id}">${opt}</label>`;
+  item.querySelector('input').onchange = () => onCheckChange(filterId);
+  list.appendChild(item);
+}
+
+function filterPanelItems(filterId, query) {
+  const list = document.getElementById('list-' + filterId);
+  const q = query.toLowerCase();
+  list.querySelectorAll('.ms-item:not(.select-all)').forEach(item => {
+    item.style.display = item.dataset.val.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function toggleAll(filterId, checked) {
+  const list = document.getElementById('list-' + filterId);
+  list.querySelectorAll('.ms-item:not(.select-all) input').forEach(cb => {
+    cb.checked = checked;
+  });
+  msState[filterId].clear();
+  updateTriggerLabel(filterId);
+  applyFilters();
+}
+
+function onCheckChange(filterId) {
+  const list = document.getElementById('list-' + filterId);
+  const checks = list.querySelectorAll('.ms-item:not(.select-all) input');
+  const allCheck = list.querySelector('.select-all input');
+  const checked = [...checks].filter(c => c.checked);
+  // If none or all checked, state = "all"
+  if (checked.length === 0 || checked.length === checks.length) {
+    msState[filterId].clear();
+    if (checked.length === 0) checks.forEach(c => c.checked = true); // revert if none
+    allCheck.checked = true;
+  } else {
+    msState[filterId] = new Set(checked.map(c => c.value));
+    allCheck.checked = false;
+  }
+  updateTriggerLabel(filterId);
+  applyFilters();
+}
+
+function updateTriggerLabel(filterId) {
+  const trigger = document.getElementById('trig-' + filterId);
+  const sel = msState[filterId];
+  if (sel.size === 0) {
+    trigger.textContent = trigger.dataset.placeholder;
+    trigger.classList.remove('has-val');
+  } else if (sel.size === 1) {
+    trigger.textContent = [...sel][0];
+    trigger.classList.add('has-val');
+  } else {
+    trigger.textContent = sel.size + ' seleccionados';
+    trigger.classList.add('has-val');
+  }
+}
+
+function closeAllPanels(except) {
+  document.querySelectorAll('.ms-panel.open').forEach(p => {
+    if (p.id !== 'panel-' + except) {
+      p.classList.remove('open');
+      const trig = document.getElementById('trig-' + p.id.replace('panel-',''));
+      if (trig) trig.classList.remove('active');
+    }
+  });
+}
+
+document.addEventListener('click', () => closeAllPanels(null));
+
+function getSelected(filterId) { return msState[filterId]; }
+
+function resetMultiSelect(filterId) {
+  const list = document.getElementById('list-' + filterId);
+  if (!list) return;
+  list.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = true);
+  msState[filterId].clear();
+  updateTriggerLabel(filterId);
+}
+
+// Rebuild options when data loads
+function rebuildMultiSelect(filterId, newOptions) {
+  const list = document.getElementById('list-' + filterId);
+  if (!list) return;
+  // Remove non-select-all items
+  list.querySelectorAll('.ms-item:not(.select-all)').forEach(el => el.remove());
+  const trig = document.getElementById('trig-' + filterId);
+  newOptions.forEach(opt => addOptionToPanel(list, filterId, opt, trig?.dataset.placeholder));
+  msState[filterId].clear();
+  updateTriggerLabel(filterId);
+}
+
+// =============================================
+// DASHBOARD LOGIC
+// =============================================
 const TO={Platinum:0,Gold:1,Silver:2,Bronze:3,"White Whale":4,Trend:5,Other:6};
 const TC={Platinum:'#e2e8f0',Gold:'#f4e04a',Silver:'#94a3b8',Bronze:'#cd7f32',"White Whale":'#a855f7',Trend:'#34d399',Other:'#6b7280'};
 const BC={Oatly:'#f4e04a',Alpro:'#60a5fa',"Yo Soy":'#f97316',"Minor Figures":'#a78bfa',ROA:'#fb7185',Naturli:'#4ade80',Ametller:'#f59e0b',Dryk:'#06b6d4',Other:'#34d399',Unknown:'#4b5563'};
 const SC={Won:'#4ade80',Lead:'#60a5fa',Unknown:'#4b5563'};
 
-let RAW=[], fd=[], sc='', sa=true, ch={};
+let RAW=[], fd=[], sortCol='', sortAsc=true, ch={};
+
+// Init multi-selects with placeholder options (real ones loaded after file)
+function initFilters() {
+  const defs = [
+    ['fg-owner',  'owner',  'Todos los owners',    [], true],
+    ['fg-tier',   'tier',   'Todos los tiers',     ['Platinum','Gold','Silver','Bronze','White Whale','Trend','Other']],
+    ['fg-status', 'status', 'Todos los status',    ['Won','Lead','Unknown']],
+    ['fg-type',   'type',   'Todos los tipos',     [], true],
+    ['fg-brand',  'brand',  'Todas las marcas',    [], true],
+    ['fg-canal',  'canal',  'Todos los canales',   ['BMD','FOOD SERVICE']],
+    ['fg-prio',   'prio',   'Todas las prios',     ['1','2']],
+    ['fg-litros', 'litros', 'Todos',               ['Con datos registrados']],
+  ];
+  defs.forEach(([cid, fid, ph, opts, search]) => {
+    const ms = createMultiSelect(cid, fid, ph, opts, search||false);
+    ms.trigger.dataset.placeholder = ph;
+  });
+  document.getElementById('fs').addEventListener('input', applyFilters);
+}
 
 // ---- FILE HANDLING ----
 function handleDrop(e){
   e.preventDefault();
   document.getElementById('dropZone').classList.remove('drag');
-  const f=e.dataTransfer.files[0];
-  if(f) handleFile(f);
+  const f=e.dataTransfer.files[0]; if(f)handleFile(f);
 }
-
 function handleFile(file){
-  if(!file) return;
+  if(!file)return;
   const ext=file.name.split('.').pop().toLowerCase();
   const reader=new FileReader();
-
-  if(ext==='csv'){
-    reader.onload=e=>parseCSV(e.target.result);
-    reader.readAsText(file, 'UTF-8');
-  } else {
-    reader.onload=e=>parseXLSX(e.target.result);
-    reader.readAsArrayBuffer(file);
-  }
+  if(ext==='csv'){reader.onload=e=>parseCSV(e.target.result);reader.readAsText(file,'UTF-8');}
+  else{reader.onload=e=>parseXLSX(e.target.result);reader.readAsArrayBuffer(file);}
 }
-
 function parseXLSX(buffer){
-  try {
+  try{
     const wb=XLSX.read(buffer,{type:'array'});
     const ws=wb.Sheets[wb.SheetNames[0]];
-    // monday.com exports have 2 header rows, try to detect
-    const raw=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
-    // Find the real header row (look for "Name" column)
-    let data=raw;
-    // If first row doesn't have 'Name', try skipping rows
-    if(raw.length>0 && !raw[0]['Name']){
-      // Try with header offset
-      const raw2=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false,range:2});
-      if(raw2.length>0 && raw2[0]['Name']) data=raw2;
+    let data=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+    if(data.length>0&&!data[0]['Name']){
+      const d2=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false,range:2});
+      if(d2.length>0&&d2[0]['Name'])data=d2;
     }
     processData(data);
-  } catch(err){
-    showError('Error leyendo el archivo: '+err.message);
-  }
+  }catch(err){showError('Error leyendo el archivo: '+err.message);}
 }
-
 function parseCSV(text){
-  try {
+  try{
     const lines=text.split('\n');
-    // Find header line with 'Name'
-    let headerIdx=0;
-    for(let i=0;i<Math.min(5,lines.length);i++){
-      if(lines[i].includes('Name')&&lines[i].includes('Tier')){headerIdx=i;break;}
-    }
-    const headers=lines[headerIdx].split(',').map(h=>h.replace(/"/g,'').trim());
+    let hi=0;
+    for(let i=0;i<Math.min(5,lines.length);i++){if(lines[i].includes('Name')&&lines[i].includes('Tier')){hi=i;break;}}
+    const headers=lines[hi].split(',').map(h=>h.replace(/"/g,'').trim());
     const data=[];
-    for(let i=headerIdx+1;i<lines.length;i++){
+    for(let i=hi+1;i<lines.length;i++){
       if(!lines[i].trim())continue;
       const vals=lines[i].split(',');
       const row={};
@@ -292,11 +461,8 @@ function parseCSV(text){
       data.push(row);
     }
     processData(data);
-  } catch(err){
-    showError('Error leyendo CSV: '+err.message);
-  }
+  }catch(err){showError('Error CSV: '+err.message);}
 }
-
 function normTier(t){
   t=String(t||'').trim().toUpperCase();
   if(t.includes('PLAT'))return 'Platinum';
@@ -307,111 +473,84 @@ function normTier(t){
   if(t.includes('TREND'))return 'Trend';
   return 'Other';
 }
-
-function clean(v){ return (v===null||v===undefined||String(v).trim()===''||String(v).trim()==='n/d')?'':String(v).trim(); }
+function clean(v){return(v===null||v===undefined||String(v).trim()===''||String(v).trim()==='n/d')?'':String(v).trim();}
 
 function processData(rows){
-  if(!rows||rows.length===0){showError('No se encontraron datos en el archivo.');return;}
-  
+  if(!rows||rows.length===0){showError('No se encontraron datos.');return;}
   RAW=rows.map(r=>({
-    'Name': clean(r['Name'])||'(sin nombre)',
-    'Primary Owner': clean(r['Primary Owner']),
-    'Secondary Owner': clean(r['Secondary Owner']),
-    'Account Type': clean(r['Account Type']),
-    'Influence': clean(r['Influence']),
-    'Rough volume': clean(r['Rough volume']),
-    'Tier': normTier(r['Tier']),
-    'Region': clean(r['Region']),
-    'Type': clean(r['Type']),
-    'Current Oat Brand': clean(r['Current Oat Brand']),
-    'Account Status': clean(r['Account Status'])||'Unknown',
-    'Annual litres': parseFloat(r['Annual litres'])||0,
-    'City': clean(r['City']),
-    'Country': clean(r['Country']),
-    'Distributors/Wholesaler': clean(r['Distributors/Wholesaler']),
-    'Prio': parseInt(r['Prio'])||0,
-    'Which Oatly products': clean(r['Which Oatly products']),
-    'IG Following': parseFloat(r['IG Following'])||0,
-  })).filter(r=>r['Name']!=='(sin nombre)'||true);
+    'Name':clean(r['Name'])||'—',
+    'Primary Owner':clean(r['Primary Owner']),
+    'Account Type':clean(r['Account Type']),
+    'Tier':normTier(r['Tier']),
+    'Type':clean(r['Type']),
+    'Current Oat Brand':clean(r['Current Oat Brand']),
+    'Account Status':clean(r['Account Status'])||'Unknown',
+    'Annual litres':parseFloat(r['Annual litres'])||0,
+    'City':clean(r['City']),
+    'Distributors/Wholesaler':clean(r['Distributors/Wholesaler']),
+    'Prio':parseInt(r['Prio'])||0,
+  }));
 
-  // Show dashboard
+  // Rebuild dynamic multi-selects
+  const owners=[...new Set(RAW.map(r=>r['Primary Owner']).filter(Boolean))].sort();
+  const types=[...new Set(RAW.map(r=>r['Type']).filter(Boolean))].sort();
+  const brands=[...new Set(RAW.map(r=>r['Current Oat Brand']).filter(Boolean))].sort();
+  rebuildMultiSelect('owner', owners);
+  rebuildMultiSelect('type', types);
+  rebuildMultiSelect('brand', brands);
+
   document.getElementById('uploadZone').style.display='none';
   document.getElementById('dashboard').style.display='flex';
   document.getElementById('hcount').style.display='block';
   document.getElementById('btnReload').style.display='block';
   document.getElementById('nAll').textContent=RAW.length;
 
-  // Populate filter options
-  const fo=document.getElementById('fo');
-  fo.innerHTML='<option value="">Todos</option>';
-  [...new Set(RAW.map(r=>r['Primary Owner']).filter(Boolean))].sort().forEach(o=>fo.appendChild(new Option(o,o)));
-
-  const fty=document.getElementById('fty');
-  fty.innerHTML='<option value="">Todos</option>';
-  [...new Set(RAW.map(r=>r['Type']).filter(Boolean))].sort().forEach(t=>fty.appendChild(new Option(t,t)));
-
-  const fbn=document.getElementById('fb');
-  fbn.innerHTML='<option value="">Todas</option>';
-  [...new Set(RAW.map(r=>r['Current Oat Brand']).filter(Boolean))].sort().forEach(b=>fbn.appendChild(new Option(b,b)));
-
   fd=[...RAW];
   upAll();
 }
 
 function reloadFile(){
-  // Reset to upload state
   document.getElementById('uploadZone').style.display='flex';
   document.getElementById('dashboard').style.display='none';
   document.getElementById('hcount').style.display='none';
   document.getElementById('btnReload').style.display='none';
   document.getElementById('fileInput').value='';
-  RAW=[];fd=[];sc='';sa=true;
+  RAW=[];fd=[];sortCol='';sortAsc=true;
   Object.values(ch).forEach(c=>c.destroy());ch={};
 }
-
-function showError(msg){
-  const el=document.getElementById('uploadError');
-  el.textContent=msg;el.style.display='block';
-}
+function showError(msg){const el=document.getElementById('uploadError');el.textContent=msg;el.style.display='block';}
 
 // ---- FILTERS ----
+function passes(r, filterId, field) {
+  const sel = msState[filterId];
+  if (!sel || sel.size === 0) return true; // nothing selected = all pass
+  if (filterId === 'litros') return r['Annual litres'] > 0;
+  if (filterId === 'prio') return sel.has(String(r['Prio']));
+  return sel.has(r[field]);
+}
+
 function applyFilters(){
-  const s=document.getElementById('fs').value.toLowerCase();
-  const o=document.getElementById('fo').value;
-  const t=document.getElementById('ft').value;
-  const st=document.getElementById('fst').value;
-  const ty=document.getElementById('fty').value;
-  const b=document.getElementById('fb').value;
-  const ac=document.getElementById('fac').value;
-  const p=document.getElementById('fp').value;
-  const l=document.getElementById('fl2').value;
-  fd=RAW.filter(r=>{
-    if(s&&!r['Name'].toLowerCase().includes(s))return false;
-    if(o&&r['Primary Owner']!==o)return false;
-    if(t&&r['Tier']!==t)return false;
-    if(st&&r['Account Status']!==st)return false;
-    if(ty&&r['Type']!==ty)return false;
-    if(b&&r['Current Oat Brand']!==b)return false;
-    if(ac&&r['Account Type']!==ac)return false;
-    if(p&&String(r['Prio'])!==p)return false;
-    if(l==='yes'&&!(r['Annual litres']>0))return false;
+  const s = document.getElementById('fs').value.toLowerCase();
+  fd = RAW.filter(r => {
+    if (s && !r['Name'].toLowerCase().includes(s)) return false;
+    if (!passes(r,'owner','Primary Owner')) return false;
+    if (!passes(r,'tier','Tier')) return false;
+    if (!passes(r,'status','Account Status')) return false;
+    if (!passes(r,'type','Type')) return false;
+    if (!passes(r,'brand','Current Oat Brand')) return false;
+    if (!passes(r,'canal','Account Type')) return false;
+    if (!passes(r,'prio','Prio')) return false;
+    if (!passes(r,'litros',null)) return false;
     return true;
   });
   upAll();
 }
 
-function resetF(){
-  ['fo','ft','fst','fty','fb','fac','fp','fl2'].forEach(id=>document.getElementById(id).value='');
+function resetAll(){
   document.getElementById('fs').value='';
+  ['owner','tier','status','type','brand','canal','prio','litros'].forEach(resetMultiSelect);
   applyFilters();
 }
-
-['fs','fo','ft','fst','fty','fb','fac','fp','fl2'].forEach(id=>{
-  document.addEventListener('DOMContentLoaded',()=>{
-    const el=document.getElementById(id);
-    if(el)el.addEventListener(el.tagName==='SELECT'?'change':'input',applyFilters);
-  });
-});
 
 // ---- RENDER ----
 function upAll(){
@@ -511,16 +650,14 @@ function upOwners(){
 let sd=[];
 function upTable(){
   sd=[...fd];
-  if(sc)sd.sort((a,b)=>{
-    let va=a[sc]??'',vb=b[sc]??'';
-    if(typeof va==='number')return sa?va-vb:vb-va;
-    return sa?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  if(sortCol)sd.sort((a,b)=>{
+    let va=a[sortCol]??'',vb=b[sortCol]??'';
+    if(typeof va==='number')return sortAsc?va-vb:vb-va;
+    return sortAsc?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
   });
   renderTable();
 }
-
-function srt(col){sc===col?sa=!sa:(sc=col,sa=true);upTable();}
-
+function srt(col){sortCol===col?sortAsc=!sortAsc:(sortCol=col,sortAsc=true);upTable();}
 function renderTable(){
   document.getElementById('tcnt').textContent=sd.length;
   const TBadge={Platinum:'bpt',Gold:'bgo',Silver:'bsi',Bronze:'bbr',"White Whale":'bwh'};
@@ -530,7 +667,7 @@ function renderTable(){
     const sc2=st==='Won'?'bw':st==='Lead'?'bl':'bu';
     const tc2=TBadge[ti]||'bot';
     const li=r['Annual litres']>0?r['Annual litres'].toLocaleString('es')+' L':'—';
-    const liStyle=r['Annual litres']>0?'font-weight:700;color:var(--oatly)':'color:var(--muted)';
+    const ls=r['Annual litres']>0?'font-weight:700;color:var(--oatly)':'color:var(--muted)';
     const pr=r['Prio']>0?`<span style="color:var(--oatly);font-weight:700">★${r['Prio']}</span>`:'—';
     const bd=BC[r['Current Oat Brand']]?`<span class="dot" style="background:${BC[r['Current Oat Brand']]}"></span>`:'';
     return `<tr>
@@ -541,7 +678,7 @@ function renderTable(){
       <td style="color:var(--muted)">${r['Account Type']||'—'}</td>
       <td>${r['Primary Owner']?.split(' ')[0]||'—'}</td>
       <td>${bd}${r['Current Oat Brand']||'—'}</td>
-      <td style="text-align:right;${liStyle}">${li}</td>
+      <td style="text-align:right;${ls}">${li}</td>
       <td style="text-align:center">${pr}</td>
       <td style="color:var(--muted)">${r['City']||'—'}</td>
       <td style="color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis">${r['Distributors/Wholesaler']||'—'}</td>
@@ -557,13 +694,7 @@ function exportCSV(){
   a.download='oatly_cuentas_filtrado.csv';a.click();
 }
 
-// Bind filter events after DOM ready
-document.addEventListener('DOMContentLoaded',()=>{
-  ['fs','fo','ft','fst','fty','fb','fac','fp','fl2'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.addEventListener(el.tagName==='SELECT'?'change':'input',applyFilters);
-  });
-});
+document.addEventListener('DOMContentLoaded', initFilters);
 </script>
 </body>
 </html>
