@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oatly Last Mile — Commercial Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg:#0e0e0e; --surface:#161616; --surface2:#1e1e1e; --border:#2a2a2a;
+  --oatly:#f4e04a; --text:#f0efe9; --muted:#888;
+  --won:#4ade80; --lead:#60a5fa;
+  --platinum:#e2e8f0; --gold:#f4e04a; --silver:#94a3b8; --bronze:#cd7f32; --whale:#a855f7;
+  --font:'Georgia',serif; --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:14px;min-height:100vh}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:12px}
+.pill{background:var(--oatly);color:#111;font-weight:800;font-size:12px;padding:4px 11px;border-radius:20px;letter-spacing:.04em;font-family:var(--font)}
+.htitle{font-size:15px;font-weight:600}
+.hsub{font-size:11px;color:var(--muted);margin-top:1px}
+.hcount{font-size:12px;color:var(--muted);background:var(--surface2);padding:5px 12px;border-radius:20px;border:1px solid var(--border)}
+#nShown{color:var(--oatly);font-weight:700}
+
+/* UPLOAD ZONE */
+#uploadZone {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:calc(100vh - 60px);gap:20px;padding:40px;
+}
+.upload-box {
+  border:2px dashed var(--border);border-radius:16px;padding:60px 80px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  cursor:pointer;transition:all .2s;max-width:480px;width:100%;text-align:center;
+}
+.upload-box:hover,.upload-box.drag{border-color:var(--oatly);background:rgba(244,224,74,.04)}
+.upload-icon{font-size:48px;line-height:1}
+.upload-title{font-size:18px;font-weight:700;color:var(--text)}
+.upload-sub{font-size:13px;color:var(--muted);line-height:1.5}
+.upload-btn{background:var(--oatly);color:#111;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px}
+#fileInput{display:none}
+.upload-note{font-size:11px;color:var(--muted);text-align:center}
+
+/* MAIN DASHBOARD (hidden until data loads) */
+#dashboard{display:none;flex-direction:column}
+
+/* FILTERS */
+.filters-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+select,input[type=text]{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:6px;font-size:12px;min-width:120px;outline:none;font-family:var(--ui)}
+select:focus,input:focus{border-color:var(--oatly)}
+.btn-r{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.btn-r:hover{border-color:var(--oatly);color:var(--oatly)}
+.btn-reload{background:transparent;border:1px solid #333;color:var(--muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px}
+.btn-reload:hover{border-color:var(--oatly);color:var(--oatly)}
+
+/* MAIN */
+.main{padding:18px 28px;display:flex;flex-direction:column;gap:16px}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.kc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--oatly)}
+.kl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:5px}
+.kv{font-size:22px;font-weight:700;font-family:var(--font);line-height:1}
+.ks{font-size:10px;color:var(--muted);margin-top:3px}
+.kc.acc .kv{color:var(--oatly)}
+
+/* CHARTS */
+.crow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.crow2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.ct{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ct em{color:var(--oatly);font-style:normal;font-size:9px;background:rgba(244,224,74,.1);padding:1px 6px;border-radius:8px}
+canvas{max-height:190px}
+
+/* BRAND BARS */
+.bbars{display:flex;flex-direction:column;gap:5px}
+.brow{display:flex;align-items:center;gap:8px}
+.bname{font-size:11px;width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bwrap{flex:1;background:var(--surface2);border-radius:3px;height:17px}
+.bbar{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;transition:width .4s}
+.bn{font-size:10px;font-weight:700}
+
+/* OWNER */
+.ogrid{display:flex;flex-direction:column;gap:7px}
+.ocard{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px}
+.oname{font-size:12px;font-weight:700;margin-bottom:4px}
+.ostats{display:flex;gap:10px}
+.ostat{font-size:10px;color:var(--muted)}
+.ostat b{color:var(--text)}
+.obar{height:2px;background:var(--border);border-radius:1px;margin-top:6px}
+.ofill{height:2px;background:var(--oatly);border-radius:1px}
+
+/* TABLE */
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.thead2{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.thead2 h3{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.btn-exp{background:var(--oatly);color:#111;border:none;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer}
+.twrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:var(--surface2);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:.06em;padding:7px 10px;text-align:left;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
+th:hover{color:var(--oatly)}
+td{padding:7px 10px;border-bottom:1px solid #1c1c1c;white-space:nowrap}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-block;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:.03em}
+.bw{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.bl{background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.3)}
+.bu{background:rgba(107,114,128,.1);color:#9ca3af;border:1px solid #2a2a2a}
+.bpt{background:rgba(226,232,240,.1);color:#e2e8f0;border:1px solid rgba(226,232,240,.3)}
+.bgo{background:rgba(244,224,74,.12);color:#f4e04a;border:1px solid rgba(244,224,74,.3)}
+.bsi{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
+.bbr{background:rgba(205,127,50,.12);color:#cd7f32;border:1px solid rgba(205,127,50,.3)}
+.bwh{background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.3)}
+.bot{background:rgba(107,114,128,.08);color:#6b7280;border:1px solid #222}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;vertical-align:middle}
+.tfooter{padding:7px 16px;font-size:10px;color:var(--muted);border-top:1px solid var(--border)}
+.footer{padding:14px 28px;text-align:center;color:var(--muted);font-size:11px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="pill">OATLY</div>
+    <div>
+      <div class="htitle">Last Mile — Commercial Dashboard</div>
+      <div class="hsub">Análisis de cuentas · España</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn-reload" id="btnReload" onclick="reloadFile()" style="display:none">↩ Cambiar archivo</button>
+    <div class="hcount" id="hcount" style="display:none">Mostrando <span id="nShown">0</span> de <span id="nAll">0</span> cuentas</div>
+  </div>
+</div>
+
+<!-- UPLOAD STATE -->
+<div id="uploadZone">
+  <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()"
+       ondragover="event.preventDefault();this.classList.add('drag')"
+       ondragleave="this.classList.remove('drag')"
+       ondrop="handleDrop(event)">
+    <div class="upload-icon">📊</div>
+    <div class="upload-title">Sube tu archivo de cuentas</div>
+    <div class="upload-sub">Exporta el Excel desde monday.com y arrástralo aquí,<br>o haz click para seleccionarlo</div>
+    <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Seleccionar archivo .xlsx</button>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+  </div>
+  <div class="upload-note">Compatible con exportaciones de monday.com · .xlsx · .xls · .csv</div>
+  <div id="uploadError" style="color:#f87171;font-size:12px;display:none"></div>
+</div>
+
+<!-- DASHBOARD (hidden) -->
+<div id="dashboard">
+  <div class="filters-bar">
+    <div class="fg"><div class="fl">Buscar</div><input type="text" id="fs" placeholder="Nombre…" style="min-width:170px"></div>
+    <div class="fg"><div class="fl">Owner</div><select id="fo"><option value="">Todos</option></select></div>
+    <div class="fg"><div class="fl">Tier</div>
+      <select id="ft"><option value="">Todos</option><option>Platinum</option><option>Gold</option><option>Silver</option><option>Bronze</option><option>White Whale</option></select>
+    </div>
+    <div class="fg"><div class="fl">Status</div>
+      <select id="fst"><option value="">Todos</option><option>Won</option><option>Lead</option></select>
+    </div>
+    <div class="fg"><div class="fl">Tipo</div><select id="fty"><option value="">Todos</option></select></div>
+    <div class="fg"><div class="fl">Marca</div><select id="fb"><option value="">Todas</option></select></div>
+    <div class="fg"><div class="fl">Canal</div>
+      <select id="fac"><option value="">Todos</option><option>BMD</option><option>FOOD SERVICE</option></select>
+    </div>
+    <div class="fg"><div class="fl">Prioridad</div>
+      <select id="fp"><option value="">Todas</option><option value="1">★ Prio 1</option><option value="2">◆ Prio 2</option></select>
+    </div>
+    <div class="fg"><div class="fl">Litros</div>
+      <select id="fl2"><option value="">Todos</option><option value="yes">Con datos</option></select>
+    </div>
+    <button class="btn-r" onclick="resetF()">✕ Reset</button>
+  </div>
+
+  <div class="main">
+    <div class="kpi-row">
+      <div class="kc acc"><div class="kl">Total cuentas</div><div class="kv" id="k1">—</div><div class="ks">filtro actual</div></div>
+      <div class="kc"><div class="kl">Cuentas Won</div><div class="kv" id="k2">—</div><div class="ks" id="k2s">del total</div></div>
+      <div class="kc"><div class="kl">Litros anuales</div><div class="kv" id="k3">—</div><div class="ks" id="k3s">cuentas con datos</div></div>
+      <div class="kc"><div class="kl">Oatly share</div><div class="kv" id="k4">—</div><div class="ks">vs competencia</div></div>
+      <div class="kc"><div class="kl">Leads activos</div><div class="kv" id="k5">—</div><div class="ks">por cerrar</div></div>
+      <div class="kc"><div class="kl">Platinum + Gold</div><div class="kv" id="k6">—</div><div class="ks">cuentas premium</div></div>
+    </div>
+    <div class="crow">
+      <div class="cc"><div class="ct">Tier <em>Distribución</em></div><canvas id="cTier"></canvas></div>
+      <div class="cc"><div class="ct">Status <em>Won vs Lead</em></div><canvas id="cStatus"></canvas></div>
+      <div class="cc"><div class="ct">Tipo de negocio <em>Top 8</em></div><canvas id="cType"></canvas></div>
+    </div>
+    <div class="crow2">
+      <div class="cc"><div class="ct">Marca de avena actual <em>Competencia</em></div><div id="brandBars" class="bbars"></div></div>
+      <div class="cc"><div class="ct">Scoreboard por Owner <em>Cuentas</em></div><div id="ownerGrid" class="ogrid"></div></div>
+    </div>
+    <div class="tc">
+      <div class="thead2">
+        <h3>Listado de cuentas</h3>
+        <button class="btn-exp" onclick="exportCSV()">⬇ Exportar CSV</button>
+      </div>
+      <div class="twrap">
+        <table><thead><tr>
+          <th onclick="srt('Name')">Cuenta ↕</th>
+          <th onclick="srt('Tier')">Tier ↕</th>
+          <th onclick="srt('Account Status')">Status ↕</th>
+          <th onclick="srt('Type')">Tipo ↕</th>
+          <th onclick="srt('Account Type')">Canal ↕</th>
+          <th onclick="srt('Primary Owner')">Owner ↕</th>
+          <th onclick="srt('Current Oat Brand')">Marca actual ↕</th>
+          <th onclick="srt('Annual litres')">L/año ↕</th>
+          <th onclick="srt('Prio')">Prio ↕</th>
+          <th>Ciudad</th>
+          <th>Distribuidor</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody></table>
+      </div>
+      <div class="tfooter">Mostrando <span id="tcnt">0</span> cuentas · click columna para ordenar</div>
+    </div>
+  </div>
+  <div class="footer">Oatly Last Mile · Dashboard comercial · datos exportados desde monday.com</div>
+</div>
+
+<script>
+const TO={Platinum:0,Gold:1,Silver:2,Bronze:3,"White Whale":4,Trend:5,Other:6};
+const TC={Platinum:'#e2e8f0',Gold:'#f4e04a',Silver:'#94a3b8',Bronze:'#cd7f32',"White Whale":'#a855f7',Trend:'#34d399',Other:'#6b7280'};
+const BC={Oatly:'#f4e04a',Alpro:'#60a5fa',"Yo Soy":'#f97316',"Minor Figures":'#a78bfa',ROA:'#fb7185',Naturli:'#4ade80',Ametller:'#f59e0b',Dryk:'#06b6d4',Other:'#34d399',Unknown:'#4b5563'};
+const SC={Won:'#4ade80',Lead:'#60a5fa',Unknown:'#4b5563'};
+
+let RAW=[], fd=[], sc='', sa=true, ch={};
+
+// ---- FILE HANDLING ----
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f) handleFile(f);
+}
+
+function handleFile(file){
+  if(!file) return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  const reader=new FileReader();
+
+  if(ext==='csv'){
+    reader.onload=e=>parseCSV(e.target.result);
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    reader.onload=e=>parseXLSX(e.target.result);
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function parseXLSX(buffer){
+  try {
+    const wb=XLSX.read(buffer,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    // monday.com exports have 2 header rows, try to detect
+    const raw=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+    // Find the real header row (look for "Name" column)
+    let data=raw;
+    // If first row doesn't have 'Name', try skipping rows
+    if(raw.length>0 && !raw[0]['Name']){
+      // Try with header offset
+      const raw2=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false,range:2});
+      if(raw2.length>0 && raw2[0]['Name']) data=raw2;
+    }
+    processData(data);
+  } catch(err){
+    showError('Error leyendo el archivo: '+err.message);
+  }
+}
+
+function parseCSV(text){
+  try {
+    const lines=text.split('\n');
+    // Find header line with 'Name'
+    let headerIdx=0;
+    for(let i=0;i<Math.min(5,lines.length);i++){
+      if(lines[i].includes('Name')&&lines[i].includes('Tier')){headerIdx=i;break;}
+    }
+    const headers=lines[headerIdx].split(',').map(h=>h.replace(/"/g,'').trim());
+    const data=[];
+    for(let i=headerIdx+1;i<lines.length;i++){
+      if(!lines[i].trim())continue;
+      const vals=lines[i].split(',');
+      const row={};
+      headers.forEach((h,j)=>{row[h]=(vals[j]||'').replace(/"/g,'').trim();});
+      data.push(row);
+    }
+    processData(data);
+  } catch(err){
+    showError('Error leyendo CSV: '+err.message);
+  }
+}
+
+function normTier(t){
+  t=String(t||'').trim().toUpperCase();
+  if(t.includes('PLAT'))return 'Platinum';
+  if(t==='GOLD')return 'Gold';
+  if(t==='SILVER')return 'Silver';
+  if(t==='BRONZE')return 'Bronze';
+  if(t.includes('WHITE')||t.includes('WHALE'))return 'White Whale';
+  if(t.includes('TREND'))return 'Trend';
+  return 'Other';
+}
+
+function clean(v){ return (v===null||v===undefined||String(v).trim()===''||String(v).trim()==='n/d')?'':String(v).trim(); }
+
+function processData(rows){
+  if(!rows||rows.length===0){showError('No se encontraron datos en el archivo.');return;}
+  
+  RAW=rows.map(r=>({
+    'Name': clean(r['Name'])||'(sin nombre)',
+    'Primary Owner': clean(r['Primary Owner']),
+    'Secondary Owner': clean(r['Secondary Owner']),
+    'Account Type': clean(r['Account Type']),
+    'Influence': clean(r['Influence']),
+    'Rough volume': clean(r['Rough volume']),
+    'Tier': normTier(r['Tier']),
+    'Region': clean(r['Region']),
+    'Type': clean(r['Type']),
+    'Current Oat Brand': clean(r['Current Oat Brand']),
+    'Account Status': clean(r['Account Status'])||'Unknown',
+    'Annual litres': parseFloat(r['Annual litres'])||0,
+    'City': clean(r['City']),
+    'Country': clean(r['Country']),
+    'Distributors/Wholesaler': clean(r['Distributors/Wholesaler']),
+    'Prio': parseInt(r['Prio'])||0,
+    'Which Oatly products': clean(r['Which Oatly products']),
+    'IG Following': parseFloat(r['IG Following'])||0,
+  })).filter(r=>r['Name']!=='(sin nombre)'||true);
+
+  // Show dashboard
+  document.getElementById('uploadZone').style.display='none';
+  document.getElementById('dashboard').style.display='flex';
+  document.getElementById('hcount').style.display='block';
+  document.getElementById('btnReload').style.display='block';
+  document.getElementById('nAll').textContent=RAW.length;
+
+  // Populate filter options
+  const fo=document.getElementById('fo');
+  fo.innerHTML='<option value="">Todos</option>';
+  [...new Set(RAW.map(r=>r['Primary Owner']).filter(Boolean))].sort().forEach(o=>fo.appendChild(new Option(o,o)));
+
+  const fty=document.getElementById('fty');
+  fty.innerHTML='<option value="">Todos</option>';
+  [...new Set(RAW.map(r=>r['Type']).filter(Boolean))].sort().forEach(t=>fty.appendChild(new Option(t,t)));
+
+  const fbn=document.getElementById('fb');
+  fbn.innerHTML='<option value="">Todas</option>';
+  [...new Set(RAW.map(r=>r['Current Oat Brand']).filter(Boolean))].sort().forEach(b=>fbn.appendChild(new Option(b,b)));
+
+  fd=[...RAW];
+  upAll();
+}
+
+function reloadFile(){
+  // Reset to upload state
+  document.getElementById('uploadZone').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('hcount').style.display='none';
+  document.getElementById('btnReload').style.display='none';
+  document.getElementById('fileInput').value='';
+  RAW=[];fd=[];sc='';sa=true;
+  Object.values(ch).forEach(c=>c.destroy());ch={};
+}
+
+function showError(msg){
+  const el=document.getElementById('uploadError');
+  el.textContent=msg;el.style.display='block';
+}
+
+// ---- FILTERS ----
+function applyFilters(){
+  const s=document.getElementById('fs').value.toLowerCase();
+  const o=document.getElementById('fo').value;
+  const t=document.getElementById('ft').value;
+  const st=document.getElementById('fst').value;
+  const ty=document.getElementById('fty').value;
+  const b=document.getElementById('fb').value;
+  const ac=document.getElementById('fac').value;
+  const p=document.getElementById('fp').value;
+  const l=document.getElementById('fl2').value;
+  fd=RAW.filter(r=>{
+    if(s&&!r['Name'].toLowerCase().includes(s))return false;
+    if(o&&r['Primary Owner']!==o)return false;
+    if(t&&r['Tier']!==t)return false;
+    if(st&&r['Account Status']!==st)return false;
+    if(ty&&r['Type']!==ty)return false;
+    if(b&&r['Current Oat Brand']!==b)return false;
+    if(ac&&r['Account Type']!==ac)return false;
+    if(p&&String(r['Prio'])!==p)return false;
+    if(l==='yes'&&!(r['Annual litres']>0))return false;
+    return true;
+  });
+  upAll();
+}
+
+function resetF(){
+  ['fo','ft','fst','fty','fb','fac','fp','fl2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fs').value='';
+  applyFilters();
+}
+
+['fs','fo','ft','fst','fty','fb','fac','fp','fl2'].forEach(id=>{
+  document.addEventListener('DOMContentLoaded',()=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener(el.tagName==='SELECT'?'change':'input',applyFilters);
+  });
+});
+
+// ---- RENDER ----
+function upAll(){
+  document.getElementById('nShown').textContent=fd.length;
+  upKPI();upCharts();upBrands();upOwners();upTable();
+}
+
+function upKPI(){
+  const n=fd.length;
+  const won=fd.filter(r=>r['Account Status']==='Won').length;
+  const wl=fd.filter(r=>r['Annual litres']>0);
+  const tl=wl.reduce((s,r)=>s+r['Annual litres'],0);
+  const ot=fd.filter(r=>r['Current Oat Brand']==='Oatly').length;
+  const kb=fd.filter(r=>r['Current Oat Brand']&&r['Current Oat Brand']!=='Unknown').length;
+  const leads=fd.filter(r=>r['Account Status']==='Lead').length;
+  const top=fd.filter(r=>r['Tier']==='Platinum'||r['Tier']==='Gold').length;
+  document.getElementById('k1').textContent=n.toLocaleString('es');
+  document.getElementById('k2').textContent=won.toLocaleString('es');
+  document.getElementById('k2s').textContent=n>0?Math.round(won/n*100)+'% del total':'—';
+  document.getElementById('k3').textContent=tl>0?Math.round(tl).toLocaleString('es')+' L':'—';
+  document.getElementById('k3s').textContent=wl.length+' cuentas con datos';
+  document.getElementById('k4').textContent=kb>0?Math.round(ot/kb*100)+'%':'—';
+  document.getElementById('k5').textContent=leads.toLocaleString('es');
+  document.getElementById('k6').textContent=top.toLocaleString('es');
+}
+
+function dc(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
+
+function upCharts(){
+  dc('tier');
+  const tc={};fd.forEach(r=>{tc[r['Tier']]=(tc[r['Tier']]||0)+1;});
+  const tk=Object.keys(tc).sort((a,b)=>(TO[a]??9)-(TO[b]??9));
+  ch.tier=new Chart(document.getElementById('cTier'),{
+    type:'doughnut',
+    data:{labels:tk,datasets:[{data:tk.map(k=>tc[k]),backgroundColor:tk.map(k=>TC[k]||'#555'),borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#888',font:{size:10},boxWidth:10,padding:5}}},cutout:'62%'}
+  });
+  dc('status');
+  const stc={};fd.forEach(r=>{const s=r['Account Status']||'Unknown';stc[s]=(stc[s]||0)+1;});
+  const stk=Object.keys(stc).sort((a,b)=>stc[b]-stc[a]);
+  ch.status=new Chart(document.getElementById('cStatus'),{
+    type:'doughnut',
+    data:{labels:stk,datasets:[{data:stk.map(k=>stc[k]),backgroundColor:stk.map(k=>SC[k]||'#555'),borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#888',font:{size:10},boxWidth:10,padding:5}}},cutout:'62%'}
+  });
+  dc('type');
+  const tyc={};fd.forEach(r=>{if(r['Type'])tyc[r['Type']]=(tyc[r['Type']]||0)+1;});
+  const top8=Object.entries(tyc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const pal=['#f4e04a','#60a5fa','#4ade80','#f97316','#a78bfa','#fb7185','#34d399','#94a3b8'];
+  ch.type=new Chart(document.getElementById('cType'),{
+    type:'bar',
+    data:{labels:top8.map(t=>t[0]),datasets:[{data:top8.map(t=>t[1]),backgroundColor:pal,borderRadius:3,borderSkipped:false}]},
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{
+      x:{grid:{color:'#1e1e1e'},ticks:{color:'#888',font:{size:10}}},
+      y:{grid:{display:false},ticks:{color:'#ccc',font:{size:10}}}
+    }}
+  });
+}
+
+function upBrands(){
+  const bc={};fd.forEach(r=>{if(r['Current Oat Brand'])bc[r['Current Oat Brand']]=(bc[r['Current Oat Brand']]||0)+1;});
+  const sorted=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const mx=sorted[0]?.[1]||1;
+  document.getElementById('brandBars').innerHTML=sorted.map(([br,n])=>{
+    const pct=Math.round(n/mx*100);
+    const col=BC[br]||'#555';
+    const tc=(br==='Oatly'||col==='#f4e04a')?'#111':'#fff';
+    return `<div class="brow"><div class="bname" title="${br}">${br}</div><div class="bwrap"><div class="bbar" style="width:${pct}%;background:${col}"><span class="bn" style="color:${tc}">${n}</span></div></div></div>`;
+  }).join('');
+}
+
+function upOwners(){
+  const os={};
+  fd.forEach(r=>{
+    const o=r['Primary Owner'];if(!o)return;
+    if(!os[o])os[o]={t:0,w:0,l:0};
+    os[o].t++;
+    if(r['Account Status']==='Won')os[o].w++;
+    os[o].l+=r['Annual litres']||0;
+  });
+  const sorted=Object.entries(os).sort((a,b)=>b[1].t-a[1].t);
+  document.getElementById('ownerGrid').innerHTML=sorted.map(([nm,s])=>{
+    const wp=s.t>0?Math.round(s.w/s.t*100):0;
+    return `<div class="ocard">
+      <div class="oname" title="${nm}">${nm.split(' ')[0]}</div>
+      <div class="ostats">
+        <div class="ostat">Total <b>${s.t}</b></div>
+        <div class="ostat">Won <b>${s.w}</b></div>
+        <div class="ostat">% <b>${wp}%</b></div>
+        ${s.l>0?`<div class="ostat">Litros <b>${Math.round(s.l).toLocaleString('es')}L</b></div>`:''}
+      </div>
+      <div class="obar"><div class="ofill" style="width:${wp}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+let sd=[];
+function upTable(){
+  sd=[...fd];
+  if(sc)sd.sort((a,b)=>{
+    let va=a[sc]??'',vb=b[sc]??'';
+    if(typeof va==='number')return sa?va-vb:vb-va;
+    return sa?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  });
+  renderTable();
+}
+
+function srt(col){sc===col?sa=!sa:(sc=col,sa=true);upTable();}
+
+function renderTable(){
+  document.getElementById('tcnt').textContent=sd.length;
+  const TBadge={Platinum:'bpt',Gold:'bgo',Silver:'bsi',Bronze:'bbr',"White Whale":'bwh'};
+  document.getElementById('tbody').innerHTML=sd.map(r=>{
+    const st=r['Account Status']||'Unknown';
+    const ti=r['Tier']||'Other';
+    const sc2=st==='Won'?'bw':st==='Lead'?'bl':'bu';
+    const tc2=TBadge[ti]||'bot';
+    const li=r['Annual litres']>0?r['Annual litres'].toLocaleString('es')+' L':'—';
+    const liStyle=r['Annual litres']>0?'font-weight:700;color:var(--oatly)':'color:var(--muted)';
+    const pr=r['Prio']>0?`<span style="color:var(--oatly);font-weight:700">★${r['Prio']}</span>`:'—';
+    const bd=BC[r['Current Oat Brand']]?`<span class="dot" style="background:${BC[r['Current Oat Brand']]}"></span>`:'';
+    return `<tr>
+      <td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r['Name']}">${r['Name']}</td>
+      <td><span class="badge ${tc2}">${ti}</span></td>
+      <td><span class="badge ${sc2}">${st}</span></td>
+      <td>${r['Type']||'—'}</td>
+      <td style="color:var(--muted)">${r['Account Type']||'—'}</td>
+      <td>${r['Primary Owner']?.split(' ')[0]||'—'}</td>
+      <td>${bd}${r['Current Oat Brand']||'—'}</td>
+      <td style="text-align:right;${liStyle}">${li}</td>
+      <td style="text-align:center">${pr}</td>
+      <td style="color:var(--muted)">${r['City']||'—'}</td>
+      <td style="color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis">${r['Distributors/Wholesaler']||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportCSV(){
+  const cols=['Name','Tier','Account Status','Type','Account Type','Primary Owner','Current Oat Brand','Annual litres','Prio','City','Distributors/Wholesaler'];
+  const rows=[cols.join(','),...sd.map(r=>cols.map(c=>`"${String(r[c]||'').replace(/"/g,"'")}"`).join(','))];
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download='oatly_cuentas_filtrado.csv';a.click();
+}
+
+// Bind filter events after DOM ready
+document.addEventListener('DOMContentLoaded',()=>{
+  ['fs','fo','ft','fst','fty','fb','fac','fp','fl2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener(el.tagName==='SELECT'?'change':'input',applyFilters);
+  });
+});
+</script>
+</body>
+</html>
