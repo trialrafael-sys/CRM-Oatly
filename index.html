@@ -3,158 +3,159 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oatly Last Mile — Commercial Dashboard</title>
+<title>Oatly CRM — Commercial Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root {
-  --bg:#0e0e0e; --surface:#161616; --surface2:#1e1e1e; --border:#2a2a2a;
-  --oatly:#f4e04a; --text:#f0efe9; --muted:#666;
-  --won:#4ade80; --lead:#60a5fa;
-  --font:'Georgia',serif; --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+:root{
+  --bg:#f4f6f9; --surface:#ffffff; --surface2:#f7f9fc; --border:#e2e8f0; --border2:#cbd5e1;
+  --navy:#0f2848; --navy2:#1e3a5f; --accent:#1d4ed8; --accent-soft:#eff4ff;
+  --text:#1a2433; --muted:#64748b; --muted2:#94a3b8;
+  --won:#0f766e; --won-bg:#e6f4f1; --lead:#1d4ed8; --lead-bg:#eef2ff;
+  --pos:#0f766e; --neg:#b91c1c;
+  --platinum:#475569; --gold:#a16207; --silver:#64748b; --bronze:#92400e; --whale:#6d28d9;
+  --serif:'Georgia','Times New Roman',serif;
+  --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:'SF Mono','Roboto Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:14px;min-height:100vh}
 
 /* HEADER */
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
-.brand{display:flex;align-items:center;gap:12px}
-.pill{background:var(--oatly);color:#111;font-weight:800;font-size:12px;padding:4px 11px;border-radius:20px;letter-spacing:.04em;font-family:var(--font)}
-.htitle{font-size:15px;font-weight:600}
-.hsub{font-size:11px;color:var(--muted);margin-top:1px}
-.hcount{font-size:12px;color:var(--muted);background:var(--surface2);padding:5px 12px;border-radius:20px;border:1px solid var(--border)}
-#nShown{color:var(--oatly);font-weight:700}
+.header{background:var(--navy);border-bottom:3px solid var(--accent);padding:0;position:sticky;top:0;z-index:100}
+.header-inner{padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:14px}
+.mark{width:38px;height:38px;border-radius:7px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:18px;color:var(--navy);letter-spacing:-.02em}
+.htitle{font-size:16px;font-weight:600;color:#fff;letter-spacing:.01em}
+.hsub{font-size:11px;color:#9fb3cc;margin-top:2px;text-transform:uppercase;letter-spacing:.1em}
+.hright{display:flex;gap:12px;align-items:center}
+.hcount{font-size:12px;color:#cbd9ea;font-family:var(--mono);background:rgba(255,255,255,.07);padding:6px 14px;border-radius:5px;border:1px solid rgba(255,255,255,.12)}
+#nShown{color:#fff;font-weight:700}
+.btn-reload{background:transparent;border:1px solid rgba(255,255,255,.25);color:#cbd9ea;padding:6px 13px;border-radius:5px;cursor:pointer;font-size:11px;transition:all .15s}
+.btn-reload:hover{border-color:#fff;color:#fff}
 
 /* UPLOAD */
-#uploadZone{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);gap:20px;padding:40px}
-.upload-box{border:2px dashed var(--border);border-radius:16px;padding:60px 80px;display:flex;flex-direction:column;align-items:center;gap:16px;cursor:pointer;transition:all .2s;max-width:480px;width:100%;text-align:center}
-.upload-box:hover,.upload-box.drag{border-color:var(--oatly);background:rgba(244,224,74,.04)}
-.upload-icon{font-size:48px;line-height:1}
-.upload-title{font-size:18px;font-weight:700}
-.upload-sub{font-size:13px;color:var(--muted);line-height:1.5}
-.upload-btn{background:var(--oatly);color:#111;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px}
+#uploadZone{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);gap:18px;padding:40px}
+.upload-box{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:10px;padding:54px 76px;display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;transition:all .2s;max-width:520px;width:100%;text-align:center;box-shadow:0 4px 20px rgba(15,40,72,.06)}
+.upload-box:hover,.upload-box.drag{border-color:var(--accent);box-shadow:0 6px 28px rgba(29,78,216,.12)}
+.upload-mark{width:56px;height:56px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:26px}
+.upload-title{font-size:19px;font-weight:700;color:var(--navy);font-family:var(--serif)}
+.upload-sub{font-size:13px;color:var(--muted);line-height:1.6}
+.upload-btn{background:var(--accent);color:#fff;border:none;padding:10px 26px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;transition:background .15s}
+.upload-btn:hover{background:#1641b8}
 #fileInput{display:none}
-.upload-note{font-size:11px;color:var(--muted)}
+.upload-note{font-size:11px;color:var(--muted2);letter-spacing:.03em}
 
 /* DASHBOARD */
 #dashboard{display:none;flex-direction:column}
 
-/* ---- MULTI-SELECT DROPDOWN ---- */
-.filters-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;position:sticky;top:57px;z-index:100}
-.fg{display:flex;flex-direction:column;gap:3px;position:relative}
-.fl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:1px}
-
-/* The trigger button */
-.ms-trigger{
-  background:var(--surface2);border:1px solid var(--border);color:var(--text);
-  padding:5px 28px 5px 9px;border-radius:6px;font-size:12px;min-width:130px;
-  cursor:pointer;text-align:left;position:relative;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;font-family:var(--ui);
-  transition:border-color .15s;
-}
-.ms-trigger::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted)}
-.ms-trigger.active,.ms-trigger:hover{border-color:var(--oatly)}
-.ms-trigger.has-val{border-color:rgba(244,224,74,.5);color:var(--oatly)}
-
-/* Dropdown panel */
-.ms-panel{
-  display:none;position:absolute;top:calc(100% + 4px);left:0;
-  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
-  min-width:180px;max-height:260px;overflow-y:auto;z-index:300;
-  box-shadow:0 8px 24px rgba(0,0,0,.5);
-}
+/* FILTERS */
+.filters-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 32px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;box-shadow:0 1px 3px rgba(15,40,72,.04)}
+.fg{display:flex;flex-direction:column;gap:4px;position:relative}
+.fl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+.ms-trigger-text{background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:6px 11px;border-radius:5px;font-size:12px;min-width:170px;outline:none;font-family:var(--ui)}
+.ms-trigger-text:focus{border-color:var(--accent)}
+.ms-trigger{position:relative;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:6px 26px 6px 11px;border-radius:5px;font-size:12px;min-width:140px;text-align:left;cursor:pointer;font-family:var(--ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-trigger::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted)}
+.ms-trigger.active,.ms-trigger:hover{border-color:var(--accent)}
+.ms-trigger.has-val{border-color:var(--accent);color:var(--accent);font-weight:600;background:var(--accent-soft)}
+.ms-panel{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;box-shadow:0 8px 24px rgba(15,40,72,.15);z-index:200;min-width:200px;max-width:280px}
 .ms-panel.open{display:block}
 .ms-search{padding:8px;border-bottom:1px solid var(--border)}
-.ms-search input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:11px;outline:none}
-.ms-search input:focus{border-color:var(--oatly)}
-.ms-list{padding:4px 0}
-.ms-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px;transition:background .1s}
-.ms-item:hover{background:rgba(255,255,255,.05)}
-.ms-item input[type=checkbox]{accent-color:var(--oatly);width:13px;height:13px;flex-shrink:0;cursor:pointer}
-.ms-item label{cursor:pointer;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ms-item.select-all{border-bottom:1px solid var(--border);margin-bottom:4px;color:var(--muted);font-size:11px}
-.ms-empty{padding:12px;font-size:11px;color:var(--muted);text-align:center}
-
-/* plain text search */
-.ms-trigger-text{
-  background:var(--surface2);border:1px solid var(--border);color:var(--text);
-  padding:5px 9px;border-radius:6px;font-size:12px;min-width:160px;
-  outline:none;font-family:var(--ui);transition:border-color .15s;
-}
-.ms-trigger-text:focus{border-color:var(--oatly)}
-
-.btn-r{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
-.btn-r:hover{border-color:var(--oatly);color:var(--oatly)}
-.btn-reload{background:transparent;border:1px solid #333;color:var(--muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px}
-.btn-reload:hover{border-color:var(--oatly);color:var(--oatly)}
+.ms-search input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:4px;font-size:12px;outline:none}
+.ms-search input:focus{border-color:var(--accent)}
+.ms-list{max-height:260px;overflow-y:auto;padding:4px}
+.ms-item{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:4px;cursor:pointer;font-size:12px}
+.ms-item:hover{background:var(--surface2)}
+.ms-item input{accent-color:var(--accent);cursor:pointer}
+.ms-item label{cursor:pointer;flex:1}
+.ms-item.select-all{border-bottom:1px solid var(--border);margin-bottom:3px;padding-bottom:8px;font-weight:600;color:var(--navy)}
+.btn-r{background:var(--surface);border:1px solid var(--border2);color:var(--muted);padding:6px 13px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:500}
+.btn-r:hover{border-color:var(--neg);color:var(--neg)}
 
 /* MAIN */
-.main{padding:18px 28px;display:flex;flex-direction:column;gap:16px}
-.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
-.kc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
-.kc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--oatly)}
-.kl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:5px}
-.kv{font-size:22px;font-weight:700;font-family:var(--font);line-height:1}
-.ks{font-size:10px;color:var(--muted);margin-top:3px}
-.kc.acc .kv{color:var(--oatly)}
-.crow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.crow2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
-.cc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
-.ct{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.ct em{color:var(--oatly);font-style:normal;font-size:9px;background:rgba(244,224,74,.1);padding:1px 6px;border-radius:8px}
-canvas{max-height:190px}
-.bbars{display:flex;flex-direction:column;gap:5px}
-.brow{display:flex;align-items:center;gap:8px}
-.bname{font-size:11px;width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bwrap{flex:1;background:var(--surface2);border-radius:3px;height:17px}
-.bbar{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px}
-.bn{font-size:10px;font-weight:700}
-.ogrid{display:flex;flex-direction:column;gap:7px}
-.ocard{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px}
-.oname{font-size:12px;font-weight:700;margin-bottom:4px}
-.ostats{display:flex;gap:10px}
-.ostat{font-size:10px;color:var(--muted)}
-.ostat b{color:var(--text)}
-.obar{height:2px;background:var(--border);border-radius:1px;margin-top:6px}
-.ofill{height:2px;background:var(--oatly);border-radius:1px}
-.tc{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.thead2{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
-.thead2 h3{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
-.btn-exp{background:var(--oatly);color:#111;border:none;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer}
-.twrap{overflow-x:auto;max-height:380px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th{background:var(--surface2);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:.06em;padding:7px 10px;text-align:left;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
-th:hover{color:var(--oatly)}
-td{padding:7px 10px;border-bottom:1px solid #1c1c1c;white-space:nowrap}
-tr:hover td{background:var(--surface2)}
-.badge{display:inline-block;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:.03em}
-.bw{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
-.bl{background:rgba(96,165,250,.12);color:#60a5fa;border:1px solid rgba(96,165,250,.3)}
-.bu{background:rgba(107,114,128,.1);color:#9ca3af;border:1px solid #2a2a2a}
-.bpt{background:rgba(226,232,240,.1);color:#e2e8f0;border:1px solid rgba(226,232,240,.3)}
-.bgo{background:rgba(244,224,74,.12);color:#f4e04a;border:1px solid rgba(244,224,74,.3)}
-.bsi{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
-.bbr{background:rgba(205,127,50,.12);color:#cd7f32;border:1px solid rgba(205,127,50,.3)}
-.bwh{background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.3)}
-.bot{background:rgba(107,114,128,.08);color:#6b7280;border:1px solid #222}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;vertical-align:middle}
-.tfooter{padding:7px 16px;font-size:10px;color:var(--muted);border-top:1px solid var(--border)}
-.footer{padding:14px 28px;text-align:center;color:var(--muted);font-size:11px;border-top:1px solid var(--border)}
+.main{padding:20px 32px;display:flex;flex-direction:column;gap:18px}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;box-shadow:0 1px 3px rgba(15,40,72,.04)}
+.kc.acc{background:var(--navy);border-color:var(--navy)}
+.kl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:7px}
+.kc.acc .kl{color:#9fb3cc}
+.kv{font-size:25px;font-weight:700;font-family:var(--serif);line-height:1;color:var(--navy);letter-spacing:-.01em}
+.kc.acc .kv{color:#fff}
+.ks{font-size:10px;color:var(--muted2);margin-top:5px;font-family:var(--mono)}
+.kc.acc .ks{color:#7d93ad}
+
+/* CHARTS */
+.crow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.crow2{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 1px 3px rgba(15,40,72,.04)}
+.ct{font-size:10px;color:var(--navy);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:9px}
+.ct em{color:var(--muted);font-style:normal;font-size:9px;font-weight:500;letter-spacing:.04em}
+canvas{max-height:195px}
+
+/* BRAND BARS */
+.bbars{display:flex;flex-direction:column;gap:7px;margin-top:2px}
+.brow{display:flex;align-items:center;gap:9px}
+.bname{font-size:11px;width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-weight:500}
+.bwrap{flex:1;background:var(--surface2);border-radius:3px;height:18px;border:1px solid var(--border)}
+.bbar{height:100%;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .4s;min-width:22px}
+.bn{font-size:10px;font-weight:700;font-family:var(--mono)}
+
+/* OWNER */
+.ogrid{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+.ocard{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 13px}
+.oname{font-size:12px;font-weight:700;margin-bottom:5px;color:var(--navy)}
+.ostats{display:flex;gap:14px}
+.ostat{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.ostat b{color:var(--text);font-weight:700}
+.obar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.ofill{height:3px;background:var(--accent);border-radius:2px}
+
+/* TABLE */
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(15,40,72,.04)}
+.thead2{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface2)}
+.thead2 h3{font-size:11px;color:var(--navy);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.btn-exp{background:var(--navy);color:#fff;border:none;padding:6px 15px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-exp:hover{background:var(--navy2)}
+.twrap{overflow-x:auto;max-height:400px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--surface2);color:var(--muted);font-weight:700;text-transform:uppercase;font-size:9px;letter-spacing:.06em;padding:9px 13px;text-align:left;position:sticky;top:0;z-index:1;border-bottom:2px solid var(--border2);cursor:pointer;white-space:nowrap}
+th:hover{color:var(--accent)}
+td{padding:9px 13px;border-bottom:1px solid var(--border);white-space:nowrap;color:var(--text)}
+tr:hover td{background:var(--accent-soft)}
+.num{font-family:var(--mono);text-align:right}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.03em;border:1px solid}
+.bw{background:var(--won-bg);color:var(--won);border-color:#a7d8d0}
+.bl{background:var(--lead-bg);color:var(--lead);border-color:#bfd0ff}
+.bu{background:#f1f5f9;color:var(--muted);border-color:var(--border2)}
+.bpt{background:#f1f5f9;color:var(--platinum);border-color:#cbd5e1}
+.bgo{background:#fef9e7;color:var(--gold);border-color:#f0d98a}
+.bsi{background:#f1f5f9;color:var(--silver);border-color:#cbd5e1}
+.bbr{background:#fdf3e7;color:var(--bronze);border-color:#e8c9a0}
+.bwh{background:#f3effe;color:var(--whale);border-color:#d4c4f5}
+.bot{background:#f8fafc;color:var(--muted2);border-color:var(--border)}
+.dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
+.tfooter{padding:9px 18px;font-size:10px;color:var(--muted);border-top:1px solid var(--border);font-family:var(--mono);background:var(--surface2)}
+.footer{padding:16px 32px;text-align:center;color:var(--muted2);font-size:11px;border-top:1px solid var(--border);letter-spacing:.02em}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="brand">
-    <div class="pill">OATLY</div>
-    <div>
-      <div class="htitle">Last Mile — Commercial Dashboard</div>
-      <div class="hsub">Análisis de cuentas · España</div>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="mark">O</div>
+      <div>
+        <div class="htitle">Oatly CRM</div>
+        <div class="hsub">Commercial Dashboard</div>
+      </div>
     </div>
-  </div>
-  <div style="display:flex;gap:10px;align-items:center">
-    <button class="btn-reload" id="btnReload" onclick="reloadFile()" style="display:none">↩ Cambiar archivo</button>
-    <div class="hcount" id="hcount" style="display:none">Mostrando <span id="nShown">0</span> de <span id="nAll">0</span> cuentas</div>
+    <div class="hright">
+      <button class="btn-reload" id="btnReload" onclick="reloadFile()" style="display:none">↩ Cambiar archivo</button>
+      <div class="hcount" id="hcount" style="display:none"><span id="nShown">0</span> / <span id="nAll">0</span> cuentas</div>
+    </div>
   </div>
 </div>
 
@@ -165,14 +166,14 @@ tr:hover td{background:var(--surface2)}
     ondragover="event.preventDefault();this.classList.add('drag')"
     ondragleave="this.classList.remove('drag')"
     ondrop="handleDrop(event)">
-    <div class="upload-icon">📊</div>
-    <div class="upload-title">Sube tu archivo de cuentas</div>
+    <div class="upload-mark">📈</div>
+    <div class="upload-title">Sube tu base de cuentas</div>
     <div class="upload-sub">Exporta el Excel desde monday.com y arrástralo aquí,<br>o haz click para seleccionarlo</div>
-    <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Seleccionar archivo .xlsx</button>
+    <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Seleccionar archivo</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
   </div>
-  <div class="upload-note">Compatible con exportaciones de monday.com · .xlsx · .xls · .csv</div>
-  <div id="uploadError" style="color:#f87171;font-size:12px;display:none"></div>
+  <div class="upload-note">Formatos admitidos · .xlsx · .xls · .csv</div>
+  <div id="uploadError" style="color:var(--neg);font-size:12px;display:none"></div>
 </div>
 
 <!-- DASHBOARD -->
@@ -182,7 +183,6 @@ tr:hover td{background:var(--surface2)}
       <div class="fl">Buscar</div>
       <input class="ms-trigger-text" type="text" id="fs" placeholder="Nombre de cuenta…">
     </div>
-    <!-- multi-selects injected by JS -->
     <div class="fg" id="fg-owner"><div class="fl">Owner</div></div>
     <div class="fg" id="fg-tier"><div class="fl">Tier</div></div>
     <div class="fg" id="fg-status"><div class="fl">Status</div></div>
@@ -204,17 +204,17 @@ tr:hover td{background:var(--surface2)}
       <div class="kc"><div class="kl">Platinum + Gold</div><div class="kv" id="k6">—</div><div class="ks">cuentas premium</div></div>
     </div>
     <div class="crow">
-      <div class="cc"><div class="ct">Tier <em>Distribución</em></div><canvas id="cTier"></canvas></div>
-      <div class="cc"><div class="ct">Status <em>Won vs Lead</em></div><canvas id="cStatus"></canvas></div>
+      <div class="cc"><div class="ct">Distribución por Tier <em>Cartera</em></div><canvas id="cTier"></canvas></div>
+      <div class="cc"><div class="ct">Pipeline por Status <em>Won vs Lead</em></div><canvas id="cStatus"></canvas></div>
       <div class="cc"><div class="ct">Tipo de negocio <em>Top 8</em></div><canvas id="cType"></canvas></div>
     </div>
     <div class="crow2">
-      <div class="cc"><div class="ct">Marca de avena actual <em>Competencia</em></div><div id="brandBars" class="bbars"></div></div>
-      <div class="cc"><div class="ct">Scoreboard por Owner <em>Cuentas</em></div><div id="ownerGrid" class="ogrid"></div></div>
+      <div class="cc"><div class="ct">Marca de avena actual <em>Análisis competitivo</em></div><div id="brandBars" class="bbars"></div></div>
+      <div class="cc"><div class="ct">Rendimiento por Owner <em>Scoreboard</em></div><div id="ownerGrid" class="ogrid"></div></div>
     </div>
     <div class="tc">
       <div class="thead2">
-        <h3>Listado de cuentas</h3>
+        <h3>Detalle de cuentas</h3>
         <button class="btn-exp" onclick="exportCSV()">⬇ Exportar CSV</button>
       </div>
       <div class="twrap">
@@ -233,211 +233,134 @@ tr:hover td{background:var(--surface2)}
         </tr></thead>
         <tbody id="tbody"></tbody></table>
       </div>
-      <div class="tfooter">Mostrando <span id="tcnt">0</span> cuentas · click columna para ordenar</div>
+      <div class="tfooter">Mostrando <span id="tcnt">0</span> cuentas · click en columna para ordenar</div>
     </div>
   </div>
-  <div class="footer">Oatly Last Mile · Dashboard comercial · datos exportados desde monday.com</div>
+  <div class="footer">Oatly CRM · Dashboard comercial · datos exportados desde monday.com</div>
 </div>
 
 <script>
-// =============================================
-// MULTI-SELECT COMPONENT
-// =============================================
-const msState = {}; // { filterId: Set of selected values }
-
-function createMultiSelect(containerId, filterId, placeholder, options, searchable=false) {
-  msState[filterId] = new Set();
-  const fg = document.getElementById(containerId);
-
-  const trigger = document.createElement('button');
-  trigger.className = 'ms-trigger';
-  trigger.id = 'trig-' + filterId;
-  trigger.textContent = placeholder;
-
-  const panel = document.createElement('div');
-  panel.className = 'ms-panel';
-  panel.id = 'panel-' + filterId;
-
-  // Optional search inside panel
-  if (searchable) {
-    const srchWrap = document.createElement('div');
-    srchWrap.className = 'ms-search';
-    const srchInput = document.createElement('input');
-    srchInput.type = 'text';
-    srchInput.placeholder = 'Buscar…';
-    srchInput.oninput = () => filterPanelItems(filterId, srchInput.value);
-    srchWrap.appendChild(srchInput);
-    panel.appendChild(srchWrap);
+// ============ MULTI-SELECT ============
+const msState={};
+function createMultiSelect(containerId,filterId,placeholder,options,searchable=false){
+  msState[filterId]=new Set();
+  const fg=document.getElementById(containerId);
+  const trigger=document.createElement('button');
+  trigger.className='ms-trigger';trigger.id='trig-'+filterId;trigger.textContent=placeholder;
+  trigger.dataset.placeholder=placeholder;
+  const panel=document.createElement('div');panel.className='ms-panel';panel.id='panel-'+filterId;
+  if(searchable){
+    const sw=document.createElement('div');sw.className='ms-search';
+    const si=document.createElement('input');si.type='text';si.placeholder='Buscar…';
+    si.oninput=()=>filterPanelItems(filterId,si.value);
+    sw.appendChild(si);panel.appendChild(sw);
   }
-
-  const list = document.createElement('div');
-  list.className = 'ms-list';
-  list.id = 'list-' + filterId;
-
-  // Select all
-  const allItem = document.createElement('div');
-  allItem.className = 'ms-item select-all';
-  allItem.innerHTML = `<input type="checkbox" id="chk-${filterId}-all" checked><label for="chk-${filterId}-all">Seleccionar todo</label>`;
-  allItem.querySelector('input').onchange = (e) => toggleAll(filterId, e.target.checked);
+  const list=document.createElement('div');list.className='ms-list';list.id='list-'+filterId;
+  const allItem=document.createElement('div');allItem.className='ms-item select-all';
+  allItem.innerHTML=`<input type="checkbox" id="chk-${filterId}-all" checked><label for="chk-${filterId}-all">Seleccionar todo</label>`;
+  allItem.querySelector('input').onchange=e=>toggleAll(filterId,e.target.checked);
   list.appendChild(allItem);
-
-  options.forEach(opt => addOptionToPanel(list, filterId, opt, placeholder));
+  options.forEach(opt=>addOptionToPanel(list,filterId,opt));
   panel.appendChild(list);
-
-  fg.appendChild(trigger);
-  fg.appendChild(panel);
-
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    closeAllPanels(filterId);
+  fg.appendChild(trigger);fg.appendChild(panel);
+  trigger.addEventListener('click',e=>{
+    e.stopPropagation();closeAllPanels(filterId);
     panel.classList.toggle('open');
-    trigger.classList.toggle('active', panel.classList.contains('open'));
+    trigger.classList.toggle('active',panel.classList.contains('open'));
   });
-
-  return { trigger, panel, list };
+  return{trigger,panel,list};
 }
-
-function addOptionToPanel(list, filterId, opt, placeholder) {
-  const item = document.createElement('div');
-  item.className = 'ms-item';
-  item.dataset.val = opt;
-  const id = `chk-${filterId}-${opt.replace(/[^a-z0-9]/gi,'_')}`;
-  item.innerHTML = `<input type="checkbox" id="${id}" value="${opt}" checked><label for="${id}">${opt}</label>`;
-  item.querySelector('input').onchange = () => onCheckChange(filterId);
+function addOptionToPanel(list,filterId,opt){
+  const item=document.createElement('div');item.className='ms-item';item.dataset.val=opt;
+  const id=`chk-${filterId}-${opt.replace(/[^a-z0-9]/gi,'_')}`;
+  item.innerHTML=`<input type="checkbox" id="${id}" value="${opt}" checked><label for="${id}">${opt}</label>`;
+  item.querySelector('input').onchange=()=>onCheckChange(filterId);
   list.appendChild(item);
 }
-
-function filterPanelItems(filterId, query) {
-  const list = document.getElementById('list-' + filterId);
-  const q = query.toLowerCase();
-  list.querySelectorAll('.ms-item:not(.select-all)').forEach(item => {
-    item.style.display = item.dataset.val.toLowerCase().includes(q) ? '' : 'none';
+function filterPanelItems(filterId,query){
+  const list=document.getElementById('list-'+filterId);const q=query.toLowerCase();
+  list.querySelectorAll('.ms-item:not(.select-all)').forEach(item=>{
+    item.style.display=item.dataset.val.toLowerCase().includes(q)?'':'none';
   });
 }
-
-function toggleAll(filterId, checked) {
-  const list = document.getElementById('list-' + filterId);
-  list.querySelectorAll('.ms-item:not(.select-all) input').forEach(cb => {
-    cb.checked = checked;
-  });
-  msState[filterId].clear();
-  updateTriggerLabel(filterId);
-  applyFilters();
+function toggleAll(filterId,checked){
+  const list=document.getElementById('list-'+filterId);
+  list.querySelectorAll('.ms-item:not(.select-all) input').forEach(cb=>cb.checked=checked);
+  msState[filterId].clear();updateTriggerLabel(filterId);applyFilters();
 }
-
-function onCheckChange(filterId) {
-  const list = document.getElementById('list-' + filterId);
-  const checks = list.querySelectorAll('.ms-item:not(.select-all) input');
-  const allCheck = list.querySelector('.select-all input');
-  const checked = [...checks].filter(c => c.checked);
-  // If none or all checked, state = "all"
-  if (checked.length === 0 || checked.length === checks.length) {
+function onCheckChange(filterId){
+  const list=document.getElementById('list-'+filterId);
+  const checks=list.querySelectorAll('.ms-item:not(.select-all) input');
+  const allCheck=list.querySelector('.select-all input');
+  const checked=[...checks].filter(c=>c.checked);
+  if(checked.length===0||checked.length===checks.length){
     msState[filterId].clear();
-    if (checked.length === 0) checks.forEach(c => c.checked = true); // revert if none
-    allCheck.checked = true;
-  } else {
-    msState[filterId] = new Set(checked.map(c => c.value));
-    allCheck.checked = false;
+    if(checked.length===0)checks.forEach(c=>c.checked=true);
+    allCheck.checked=true;
+  }else{
+    msState[filterId]=new Set(checked.map(c=>c.value));
+    allCheck.checked=false;
   }
-  updateTriggerLabel(filterId);
-  applyFilters();
+  updateTriggerLabel(filterId);applyFilters();
 }
-
-function updateTriggerLabel(filterId) {
-  const trigger = document.getElementById('trig-' + filterId);
-  const sel = msState[filterId];
-  if (sel.size === 0) {
-    trigger.textContent = trigger.dataset.placeholder;
-    trigger.classList.remove('has-val');
-  } else if (sel.size === 1) {
-    trigger.textContent = [...sel][0];
-    trigger.classList.add('has-val');
-  } else {
-    trigger.textContent = sel.size + ' seleccionados';
-    trigger.classList.add('has-val');
-  }
+function updateTriggerLabel(filterId){
+  const trigger=document.getElementById('trig-'+filterId);const sel=msState[filterId];
+  if(sel.size===0){trigger.textContent=trigger.dataset.placeholder;trigger.classList.remove('has-val');}
+  else if(sel.size===1){trigger.textContent=[...sel][0];trigger.classList.add('has-val');}
+  else{trigger.textContent=sel.size+' seleccionados';trigger.classList.add('has-val');}
 }
-
-function closeAllPanels(except) {
-  document.querySelectorAll('.ms-panel.open').forEach(p => {
-    if (p.id !== 'panel-' + except) {
-      p.classList.remove('open');
-      const trig = document.getElementById('trig-' + p.id.replace('panel-',''));
-      if (trig) trig.classList.remove('active');
-    }
+function closeAllPanels(except){
+  document.querySelectorAll('.ms-panel.open').forEach(p=>{
+    if(p.id!=='panel-'+except){p.classList.remove('open');
+      const t=document.getElementById('trig-'+p.id.replace('panel-',''));if(t)t.classList.remove('active');}
   });
 }
-
-document.addEventListener('click', () => closeAllPanels(null));
-
-function getSelected(filterId) { return msState[filterId]; }
-
-function resetMultiSelect(filterId) {
-  const list = document.getElementById('list-' + filterId);
-  if (!list) return;
-  list.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = true);
-  msState[filterId].clear();
-  updateTriggerLabel(filterId);
+document.addEventListener('click',()=>closeAllPanels(null));
+function resetMultiSelect(filterId){
+  const list=document.getElementById('list-'+filterId);if(!list)return;
+  list.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=true);
+  msState[filterId].clear();updateTriggerLabel(filterId);
+}
+function rebuildMultiSelect(filterId,newOptions){
+  const list=document.getElementById('list-'+filterId);if(!list)return;
+  list.querySelectorAll('.ms-item:not(.select-all)').forEach(el=>el.remove());
+  newOptions.forEach(opt=>addOptionToPanel(list,filterId,opt));
+  list.querySelector('.select-all input').checked=true;
+  msState[filterId].clear();updateTriggerLabel(filterId);
 }
 
-// Rebuild options when data loads
-function rebuildMultiSelect(filterId, newOptions) {
-  const list = document.getElementById('list-' + filterId);
-  if (!list) return;
-  // Remove non-select-all items
-  list.querySelectorAll('.ms-item:not(.select-all)').forEach(el => el.remove());
-  const trig = document.getElementById('trig-' + filterId);
-  newOptions.forEach(opt => addOptionToPanel(list, filterId, opt, trig?.dataset.placeholder));
-  msState[filterId].clear();
-  updateTriggerLabel(filterId);
-}
-
-// =============================================
-// DASHBOARD LOGIC
-// =============================================
+// ============ DASHBOARD ============
 const TO={Platinum:0,Gold:1,Silver:2,Bronze:3,"White Whale":4,Trend:5,Other:6};
-const TC={Platinum:'#e2e8f0',Gold:'#f4e04a',Silver:'#94a3b8',Bronze:'#cd7f32',"White Whale":'#a855f7',Trend:'#34d399',Other:'#6b7280'};
-const BC={Oatly:'#f4e04a',Alpro:'#60a5fa',"Yo Soy":'#f97316',"Minor Figures":'#a78bfa',ROA:'#fb7185',Naturli:'#4ade80',Ametller:'#f59e0b',Dryk:'#06b6d4',Other:'#34d399',Unknown:'#4b5563'};
-const SC={Won:'#4ade80',Lead:'#60a5fa',Unknown:'#4b5563'};
+const TC={Platinum:'#475569',Gold:'#d4a017',Silver:'#94a3b8',Bronze:'#b45309',"White Whale":'#6d28d9',Trend:'#0f766e',Other:'#cbd5e1'};
+const BC={Oatly:'#1d4ed8',Alpro:'#0891b2',"Yo Soy":'#ea580c',"Minor Figures":'#7c3aed',ROA:'#db2777',Naturli:'#0f766e',Ametller:'#d4a017',Dryk:'#0e7490',Other:'#64748b',Unknown:'#cbd5e1'};
+const SC={Won:'#0f766e',Lead:'#1d4ed8',Unknown:'#cbd5e1'};
+let RAW=[],fd=[],sortCol='',sortAsc=true,ch={};
 
-let RAW=[], fd=[], sortCol='', sortAsc=true, ch={};
-
-// Init multi-selects with placeholder options (real ones loaded after file)
-function initFilters() {
-  const defs = [
-    ['fg-owner',  'owner',  'Todos los owners',    [], true],
-    ['fg-tier',   'tier',   'Todos los tiers',     ['Platinum','Gold','Silver','Bronze','White Whale','Trend','Other']],
-    ['fg-status', 'status', 'Todos los status',    ['Won','Lead','Unknown']],
-    ['fg-type',   'type',   'Todos los tipos',     [], true],
-    ['fg-brand',  'brand',  'Todas las marcas',    [], true],
-    ['fg-canal',  'canal',  'Todos los canales',   ['BMD','FOOD SERVICE']],
-    ['fg-prio',   'prio',   'Todas las prios',     ['1','2']],
-    ['fg-litros', 'litros', 'Todos',               ['Con datos registrados']],
+function initFilters(){
+  const defs=[
+    ['fg-owner','owner','Todos los owners',[],true],
+    ['fg-tier','tier','Todos los tiers',['Platinum','Gold','Silver','Bronze','White Whale','Trend','Other']],
+    ['fg-status','status','Todos los status',['Won','Lead','Unknown']],
+    ['fg-type','type','Todos los tipos',[],true],
+    ['fg-brand','brand','Todas las marcas',[],true],
+    ['fg-canal','canal','Todos los canales',['BMD','FOOD SERVICE']],
+    ['fg-prio','prio','Todas las prios',['1','2']],
+    ['fg-litros','litros','Todos',['Con datos registrados']],
   ];
-  defs.forEach(([cid, fid, ph, opts, search]) => {
-    const ms = createMultiSelect(cid, fid, ph, opts, search||false);
-    ms.trigger.dataset.placeholder = ph;
-  });
-  document.getElementById('fs').addEventListener('input', applyFilters);
+  defs.forEach(([cid,fid,ph,opts,search])=>createMultiSelect(cid,fid,ph,opts,search||false));
+  document.getElementById('fs').addEventListener('input',applyFilters);
 }
 
-// ---- FILE HANDLING ----
-function handleDrop(e){
-  e.preventDefault();
-  document.getElementById('dropZone').classList.remove('drag');
-  const f=e.dataTransfer.files[0]; if(f)handleFile(f);
-}
+function handleDrop(e){e.preventDefault();document.getElementById('dropZone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)handleFile(f);}
 function handleFile(file){
   if(!file)return;
-  const ext=file.name.split('.').pop().toLowerCase();
-  const reader=new FileReader();
+  const ext=file.name.split('.').pop().toLowerCase();const reader=new FileReader();
   if(ext==='csv'){reader.onload=e=>parseCSV(e.target.result);reader.readAsText(file,'UTF-8');}
   else{reader.onload=e=>parseXLSX(e.target.result);reader.readAsArrayBuffer(file);}
 }
 function parseXLSX(buffer){
   try{
-    const wb=XLSX.read(buffer,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
+    const wb=XLSX.read(buffer,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];
     let data=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
     if(data.length>0&&!data[0]['Name']){
       const d2=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false,range:2});
@@ -448,15 +371,12 @@ function parseXLSX(buffer){
 }
 function parseCSV(text){
   try{
-    const lines=text.split('\n');
-    let hi=0;
+    const lines=text.split('\n');let hi=0;
     for(let i=0;i<Math.min(5,lines.length);i++){if(lines[i].includes('Name')&&lines[i].includes('Tier')){hi=i;break;}}
-    const headers=lines[hi].split(',').map(h=>h.replace(/"/g,'').trim());
-    const data=[];
+    const headers=lines[hi].split(',').map(h=>h.replace(/"/g,'').trim());const data=[];
     for(let i=hi+1;i<lines.length;i++){
       if(!lines[i].trim())continue;
-      const vals=lines[i].split(',');
-      const row={};
+      const vals=lines[i].split(',');const row={};
       headers.forEach((h,j)=>{row[h]=(vals[j]||'').replace(/"/g,'').trim();});
       data.push(row);
     }
@@ -490,74 +410,58 @@ function processData(rows){
     'Distributors/Wholesaler':clean(r['Distributors/Wholesaler']),
     'Prio':parseInt(r['Prio'])||0,
   }));
-
-  // Rebuild dynamic multi-selects
-  const owners=[...new Set(RAW.map(r=>r['Primary Owner']).filter(Boolean))].sort();
-  const types=[...new Set(RAW.map(r=>r['Type']).filter(Boolean))].sort();
-  const brands=[...new Set(RAW.map(r=>r['Current Oat Brand']).filter(Boolean))].sort();
-  rebuildMultiSelect('owner', owners);
-  rebuildMultiSelect('type', types);
-  rebuildMultiSelect('brand', brands);
-
+  rebuildMultiSelect('owner',[...new Set(RAW.map(r=>r['Primary Owner']).filter(Boolean))].sort());
+  rebuildMultiSelect('type',[...new Set(RAW.map(r=>r['Type']).filter(Boolean))].sort());
+  rebuildMultiSelect('brand',[...new Set(RAW.map(r=>r['Current Oat Brand']).filter(Boolean))].sort());
   document.getElementById('uploadZone').style.display='none';
   document.getElementById('dashboard').style.display='flex';
   document.getElementById('hcount').style.display='block';
   document.getElementById('btnReload').style.display='block';
   document.getElementById('nAll').textContent=RAW.length;
-
-  fd=[...RAW];
-  upAll();
+  fd=[...RAW];upAll();
 }
-
 function reloadFile(){
   document.getElementById('uploadZone').style.display='flex';
   document.getElementById('dashboard').style.display='none';
   document.getElementById('hcount').style.display='none';
   document.getElementById('btnReload').style.display='none';
   document.getElementById('fileInput').value='';
+  document.getElementById('uploadError').style.display='none';
   RAW=[];fd=[];sortCol='';sortAsc=true;
   Object.values(ch).forEach(c=>c.destroy());ch={};
 }
 function showError(msg){const el=document.getElementById('uploadError');el.textContent=msg;el.style.display='block';}
 
-// ---- FILTERS ----
-function passes(r, filterId, field) {
-  const sel = msState[filterId];
-  if (!sel || sel.size === 0) return true; // nothing selected = all pass
-  if (filterId === 'litros') return r['Annual litres'] > 0;
-  if (filterId === 'prio') return sel.has(String(r['Prio']));
+function passes(r,filterId,field){
+  const sel=msState[filterId];
+  if(!sel||sel.size===0)return true;
+  if(filterId==='litros')return r['Annual litres']>0;
+  if(filterId==='prio')return sel.has(String(r['Prio']));
   return sel.has(r[field]);
 }
-
 function applyFilters(){
-  const s = document.getElementById('fs').value.toLowerCase();
-  fd = RAW.filter(r => {
-    if (s && !r['Name'].toLowerCase().includes(s)) return false;
-    if (!passes(r,'owner','Primary Owner')) return false;
-    if (!passes(r,'tier','Tier')) return false;
-    if (!passes(r,'status','Account Status')) return false;
-    if (!passes(r,'type','Type')) return false;
-    if (!passes(r,'brand','Current Oat Brand')) return false;
-    if (!passes(r,'canal','Account Type')) return false;
-    if (!passes(r,'prio','Prio')) return false;
-    if (!passes(r,'litros',null)) return false;
+  const s=document.getElementById('fs').value.toLowerCase();
+  fd=RAW.filter(r=>{
+    if(s&&!r['Name'].toLowerCase().includes(s))return false;
+    if(!passes(r,'owner','Primary Owner'))return false;
+    if(!passes(r,'tier','Tier'))return false;
+    if(!passes(r,'status','Account Status'))return false;
+    if(!passes(r,'type','Type'))return false;
+    if(!passes(r,'brand','Current Oat Brand'))return false;
+    if(!passes(r,'canal','Account Type'))return false;
+    if(!passes(r,'prio','Prio'))return false;
+    if(!passes(r,'litros',null))return false;
     return true;
   });
   upAll();
 }
-
 function resetAll(){
   document.getElementById('fs').value='';
   ['owner','tier','status','type','brand','canal','prio','litros'].forEach(resetMultiSelect);
   applyFilters();
 }
 
-// ---- RENDER ----
-function upAll(){
-  document.getElementById('nShown').textContent=fd.length;
-  upKPI();upCharts();upBrands();upOwners();upTable();
-}
-
+function upAll(){document.getElementById('nShown').textContent=fd.length;upKPI();upCharts();upBrands();upOwners();upTable();}
 function upKPI(){
   const n=fd.length;
   const won=fd.filter(r=>r['Account Status']==='Won').length;
@@ -576,99 +480,69 @@ function upKPI(){
   document.getElementById('k5').textContent=leads.toLocaleString('es');
   document.getElementById('k6').textContent=top.toLocaleString('es');
 }
-
 function dc(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
-
 function upCharts(){
+  const gridC='#eef2f7',tickC='#64748b';
   dc('tier');
   const tc={};fd.forEach(r=>{tc[r['Tier']]=(tc[r['Tier']]||0)+1;});
   const tk=Object.keys(tc).sort((a,b)=>(TO[a]??9)-(TO[b]??9));
-  ch.tier=new Chart(document.getElementById('cTier'),{
-    type:'doughnut',
-    data:{labels:tk,datasets:[{data:tk.map(k=>tc[k]),backgroundColor:tk.map(k=>TC[k]||'#555'),borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#888',font:{size:10},boxWidth:10,padding:5}}},cutout:'62%'}
-  });
+  ch.tier=new Chart(document.getElementById('cTier'),{type:'doughnut',
+    data:{labels:tk,datasets:[{data:tk.map(k=>tc[k]),backgroundColor:tk.map(k=>TC[k]||'#cbd5e1'),borderWidth:2,borderColor:'#fff',hoverOffset:4}]},
+    options:{responsive:true,plugins:{legend:{position:'right',labels:{color:tickC,font:{size:10},boxWidth:10,padding:6}}},cutout:'60%'}});
   dc('status');
   const stc={};fd.forEach(r=>{const s=r['Account Status']||'Unknown';stc[s]=(stc[s]||0)+1;});
   const stk=Object.keys(stc).sort((a,b)=>stc[b]-stc[a]);
-  ch.status=new Chart(document.getElementById('cStatus'),{
-    type:'doughnut',
-    data:{labels:stk,datasets:[{data:stk.map(k=>stc[k]),backgroundColor:stk.map(k=>SC[k]||'#555'),borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#888',font:{size:10},boxWidth:10,padding:5}}},cutout:'62%'}
-  });
+  ch.status=new Chart(document.getElementById('cStatus'),{type:'doughnut',
+    data:{labels:stk,datasets:[{data:stk.map(k=>stc[k]),backgroundColor:stk.map(k=>SC[k]||'#cbd5e1'),borderWidth:2,borderColor:'#fff',hoverOffset:4}]},
+    options:{responsive:true,plugins:{legend:{position:'right',labels:{color:tickC,font:{size:10},boxWidth:10,padding:6}}},cutout:'60%'}});
   dc('type');
   const tyc={};fd.forEach(r=>{if(r['Type'])tyc[r['Type']]=(tyc[r['Type']]||0)+1;});
   const top8=Object.entries(tyc).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const pal=['#f4e04a','#60a5fa','#4ade80','#f97316','#a78bfa','#fb7185','#34d399','#94a3b8'];
-  ch.type=new Chart(document.getElementById('cType'),{
-    type:'bar',
-    data:{labels:top8.map(t=>t[0]),datasets:[{data:top8.map(t=>t[1]),backgroundColor:pal,borderRadius:3,borderSkipped:false}]},
+  ch.type=new Chart(document.getElementById('cType'),{type:'bar',
+    data:{labels:top8.map(t=>t[0]),datasets:[{data:top8.map(t=>t[1]),backgroundColor:'#1d4ed8',borderRadius:3,borderSkipped:false}]},
     options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{
-      x:{grid:{color:'#1e1e1e'},ticks:{color:'#888',font:{size:10}}},
-      y:{grid:{display:false},ticks:{color:'#ccc',font:{size:10}}}
-    }}
-  });
+      x:{grid:{color:gridC},ticks:{color:tickC,font:{size:10}}},
+      y:{grid:{display:false},ticks:{color:'#334155',font:{size:10}}}}}});
 }
-
 function upBrands(){
   const bc={};fd.forEach(r=>{if(r['Current Oat Brand'])bc[r['Current Oat Brand']]=(bc[r['Current Oat Brand']]||0)+1;});
-  const sorted=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const mx=sorted[0]?.[1]||1;
+  const sorted=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,10);const mx=sorted[0]?.[1]||1;
   document.getElementById('brandBars').innerHTML=sorted.map(([br,n])=>{
-    const pct=Math.round(n/mx*100);
-    const col=BC[br]||'#555';
-    const tc=(br==='Oatly'||col==='#f4e04a')?'#111':'#fff';
-    return `<div class="brow"><div class="bname" title="${br}">${br}</div><div class="bwrap"><div class="bbar" style="width:${pct}%;background:${col}"><span class="bn" style="color:${tc}">${n}</span></div></div></div>`;
+    const pct=Math.round(n/mx*100);const col=BC[br]||'#94a3b8';
+    return `<div class="brow"><div class="bname" title="${br}">${br}</div><div class="bwrap"><div class="bbar" style="width:${pct}%;background:${col}"><span class="bn" style="color:#fff">${n}</span></div></div></div>`;
   }).join('');
 }
-
 function upOwners(){
   const os={};
-  fd.forEach(r=>{
-    const o=r['Primary Owner'];if(!o)return;
-    if(!os[o])os[o]={t:0,w:0,l:0};
-    os[o].t++;
-    if(r['Account Status']==='Won')os[o].w++;
-    os[o].l+=r['Annual litres']||0;
-  });
+  fd.forEach(r=>{const o=r['Primary Owner'];if(!o)return;
+    if(!os[o])os[o]={t:0,w:0,l:0};os[o].t++;
+    if(r['Account Status']==='Won')os[o].w++;os[o].l+=r['Annual litres']||0;});
   const sorted=Object.entries(os).sort((a,b)=>b[1].t-a[1].t);
   document.getElementById('ownerGrid').innerHTML=sorted.map(([nm,s])=>{
     const wp=s.t>0?Math.round(s.w/s.t*100):0;
-    return `<div class="ocard">
-      <div class="oname" title="${nm}">${nm.split(' ')[0]}</div>
-      <div class="ostats">
-        <div class="ostat">Total <b>${s.t}</b></div>
-        <div class="ostat">Won <b>${s.w}</b></div>
-        <div class="ostat">% <b>${wp}%</b></div>
-        ${s.l>0?`<div class="ostat">Litros <b>${Math.round(s.l).toLocaleString('es')}L</b></div>`:''}
-      </div>
-      <div class="obar"><div class="ofill" style="width:${wp}%"></div></div>
-    </div>`;
+    return `<div class="ocard"><div class="oname" title="${nm}">${nm.split(' ')[0]}</div>
+      <div class="ostats"><div class="ostat">Total <b>${s.t}</b></div><div class="ostat">Won <b>${s.w}</b></div><div class="ostat">% <b>${wp}%</b></div>${s.l>0?`<div class="ostat">Litros <b>${Math.round(s.l).toLocaleString('es')}L</b></div>`:''}</div>
+      <div class="obar"><div class="ofill" style="width:${wp}%"></div></div></div>`;
   }).join('');
 }
-
 let sd=[];
 function upTable(){
   sd=[...fd];
-  if(sortCol)sd.sort((a,b)=>{
-    let va=a[sortCol]??'',vb=b[sortCol]??'';
+  if(sortCol)sd.sort((a,b)=>{let va=a[sortCol]??'',vb=b[sortCol]??'';
     if(typeof va==='number')return sortAsc?va-vb:vb-va;
-    return sortAsc?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
-  });
+    return sortAsc?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));});
   renderTable();
 }
 function srt(col){sortCol===col?sortAsc=!sortAsc:(sortCol=col,sortAsc=true);upTable();}
 function renderTable(){
   document.getElementById('tcnt').textContent=sd.length;
-  const TBadge={Platinum:'bpt',Gold:'bgo',Silver:'bsi',Bronze:'bbr',"White Whale":'bwh'};
+  const TB={Platinum:'bpt',Gold:'bgo',Silver:'bsi',Bronze:'bbr',"White Whale":'bwh'};
   document.getElementById('tbody').innerHTML=sd.map(r=>{
-    const st=r['Account Status']||'Unknown';
-    const ti=r['Tier']||'Other';
-    const sc2=st==='Won'?'bw':st==='Lead'?'bl':'bu';
-    const tc2=TBadge[ti]||'bot';
+    const st=r['Account Status']||'Unknown';const ti=r['Tier']||'Other';
+    const sc2=st==='Won'?'bw':st==='Lead'?'bl':'bu';const tc2=TB[ti]||'bot';
     const li=r['Annual litres']>0?r['Annual litres'].toLocaleString('es')+' L':'—';
-    const ls=r['Annual litres']>0?'font-weight:700;color:var(--oatly)':'color:var(--muted)';
-    const pr=r['Prio']>0?`<span style="color:var(--oatly);font-weight:700">★${r['Prio']}</span>`:'—';
+    const liStyle=r['Annual litres']>0?'font-weight:700;color:var(--navy)':'color:var(--muted2)';
+    const pr=r['Prio']>0?`<span style="color:var(--accent);font-weight:700">★${r['Prio']}</span>`:'—';
     const bd=BC[r['Current Oat Brand']]?`<span class="dot" style="background:${BC[r['Current Oat Brand']]}"></span>`:'';
     return `<tr>
       <td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r['Name']}">${r['Name']}</td>
@@ -678,23 +552,21 @@ function renderTable(){
       <td style="color:var(--muted)">${r['Account Type']||'—'}</td>
       <td>${r['Primary Owner']?.split(' ')[0]||'—'}</td>
       <td>${bd}${r['Current Oat Brand']||'—'}</td>
-      <td style="text-align:right;${ls}">${li}</td>
+      <td class="num" style="${liStyle}">${li}</td>
       <td style="text-align:center">${pr}</td>
       <td style="color:var(--muted)">${r['City']||'—'}</td>
       <td style="color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis">${r['Distributors/Wholesaler']||'—'}</td>
     </tr>`;
   }).join('');
 }
-
 function exportCSV(){
   const cols=['Name','Tier','Account Status','Type','Account Type','Primary Owner','Current Oat Brand','Annual litres','Prio','City','Distributors/Wholesaler'];
   const rows=[cols.join(','),...sd.map(r=>cols.map(c=>`"${String(r[c]||'').replace(/"/g,"'")}"`).join(','))];
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'}));
-  a.download='oatly_cuentas_filtrado.csv';a.click();
+  a.download='oatly_crm_cuentas.csv';a.click();
 }
-
-document.addEventListener('DOMContentLoaded', initFilters);
+document.addEventListener('DOMContentLoaded',initFilters);
 </script>
 </body>
 </html>
