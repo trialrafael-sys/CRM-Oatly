@@ -199,7 +199,7 @@ tr:hover td{background:var(--accent-soft)}
       <div class="kc acc"><div class="kl">Total cuentas</div><div class="kv" id="k1">—</div><div class="ks">filtro actual</div></div>
       <div class="kc"><div class="kl">Cuentas Won</div><div class="kv" id="k2">—</div><div class="ks" id="k2s">del total</div></div>
       <div class="kc"><div class="kl">Litros anuales</div><div class="kv" id="k3">—</div><div class="ks" id="k3s">cuentas con datos</div></div>
-      <div class="kc"><div class="kl">Oatly share</div><div class="kv" id="k4">—</div><div class="ks">vs competencia</div></div>
+      <div class="kc" style="cursor:pointer" onclick="toggleShare()" title="Click para cambiar modo de cálculo"><div class="kl">Oatly share <span id="shareMode" style="float:right;font-size:8px;background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:3px;letter-spacing:.02em">PURO ⇄</span></div><div class="kv" id="k4">—</div><div class="ks" id="k4s">solo marca conocida</div></div>
       <div class="kc"><div class="kl">Leads activos</div><div class="kv" id="k5">—</div><div class="ks">por cerrar</div></div>
       <div class="kc"><div class="kl">Platinum + Gold</div><div class="kv" id="k6">—</div><div class="ks">cuentas premium</div></div>
     </div>
@@ -334,7 +334,12 @@ const TO={Platinum:0,Gold:1,Silver:2,Bronze:3,"White Whale":4,Trend:5,Other:6};
 const TC={Platinum:'#475569',Gold:'#d4a017',Silver:'#94a3b8',Bronze:'#b45309',"White Whale":'#6d28d9',Trend:'#0f766e',Other:'#cbd5e1'};
 const BC={Oatly:'#1d4ed8',Alpro:'#0891b2',"Yo Soy":'#ea580c',"Minor Figures":'#7c3aed',ROA:'#db2777',Naturli:'#0f766e',Ametller:'#d4a017',Dryk:'#0e7490',Other:'#64748b',Unknown:'#cbd5e1','Sin marca':'#e2a23b'};
 const SC={Won:'#0f766e',Lead:'#1d4ed8',Unknown:'#cbd5e1'};
-let RAW=[],fd=[],sortCol='',sortAsc=true,ch={};
+let RAW=[],fd=[],sortCol='',sortAsc=true,ch={},shareMode='puro';
+function toggleShare(){
+  shareMode=shareMode==='puro'?'universo':'puro';
+  document.getElementById('shareMode').textContent=(shareMode==='puro'?'PURO':'TOTAL')+' ⇄';
+  upKPI();
+}
 
 function initFilters(){
   const defs=[
@@ -468,7 +473,16 @@ function upKPI(){
   const wl=fd.filter(r=>r['Annual litres']>0);
   const tl=wl.reduce((s,r)=>s+r['Annual litres'],0);
   const ot=fd.filter(r=>r['Current Oat Brand']==='Oatly').length;
-  const kb=n;
+  let denom,k4label;
+  if(shareMode==='puro'){
+    // solo marca conocida: excluye Unknown y vacíos (Sin marca)
+    denom=fd.filter(r=>r['Current Oat Brand']&&r['Current Oat Brand']!=='Unknown').length;
+    k4label='solo marca conocida';
+  }else{
+    // universo total: todas las cuentas filtradas
+    denom=n;
+    k4label='sobre universo total';
+  }
   const leads=fd.filter(r=>r['Account Status']==='Lead').length;
   const top=fd.filter(r=>r['Tier']==='Platinum'||r['Tier']==='Gold').length;
   document.getElementById('k1').textContent=n.toLocaleString('es');
@@ -476,7 +490,8 @@ function upKPI(){
   document.getElementById('k2s').textContent=n>0?Math.round(won/n*100)+'% del total':'—';
   document.getElementById('k3').textContent=tl>0?Math.round(tl).toLocaleString('es')+' L':'—';
   document.getElementById('k3s').textContent=wl.length+' cuentas con datos';
-  document.getElementById('k4').textContent=kb>0?Math.round(ot/kb*100)+'%':'—';
+  document.getElementById('k4').textContent=denom>0?Math.round(ot/denom*100)+'%':'—';
+  document.getElementById('k4s').textContent=k4label;
   document.getElementById('k5').textContent=leads.toLocaleString('es');
   document.getElementById('k6').textContent=top.toLocaleString('es');
 }
