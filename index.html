@@ -139,6 +139,50 @@ tr:hover td{background:var(--accent-soft)}
 .dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
 .tfooter{padding:9px 18px;font-size:10px;color:var(--muted);border-top:1px solid var(--border);font-family:var(--mono);background:var(--surface2)}
 .footer{padding:16px 32px;text-align:center;color:var(--muted2);font-size:11px;border-top:1px solid var(--border);letter-spacing:.02em}
+
+/* COMPARE MODAL */
+.cmp-overlay{display:none;position:fixed;inset:0;background:rgba(15,40,72,.55);z-index:500;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;backdrop-filter:blur(2px)}
+.cmp-overlay.open{display:flex}
+.cmp-modal{background:var(--bg);border-radius:12px;max-width:1120px;width:100%;box-shadow:0 20px 60px rgba(15,40,72,.35);overflow:hidden;margin:auto}
+.cmp-head{background:var(--navy);padding:18px 26px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--accent)}
+.cmp-title{font-size:17px;font-weight:700;color:#fff;font-family:var(--serif)}
+.cmp-sub{font-size:11px;color:#9fb3cc;margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
+.cmp-close{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:14px}
+.cmp-close:hover{background:rgba(255,255,255,.2)}
+.cmp-body{padding:24px 26px;display:flex;flex-direction:column;gap:22px}
+.cmp-foot{padding:14px 26px;border-top:1px solid var(--border);background:var(--surface);display:flex;justify-content:flex-end}
+.cmp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.cmp-kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:15px 17px;position:relative;overflow:hidden}
+.cmp-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.cmp-kpi.up::before{background:var(--pos)}
+.cmp-kpi.down::before{background:var(--neg)}
+.cmp-kpi.neutral::before{background:var(--muted2)}
+.cmp-kl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:7px}
+.cmp-kv{font-size:24px;font-weight:700;font-family:var(--serif);line-height:1;color:var(--navy)}
+.cmp-kd{font-size:11px;margin-top:5px;font-family:var(--mono);font-weight:600}
+.cmp-kd.pos{color:var(--pos)}.cmp-kd.neg{color:var(--neg)}.cmp-kd.neu{color:var(--muted)}
+.cmp-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.cmp-sh{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--navy);display:flex;justify-content:space-between;align-items:center}
+.cmp-sh .cnt{font-family:var(--mono);color:var(--accent)}
+.cmp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.cmp-tierwrap{padding:14px 18px}
+.cmp-tier-row{display:grid;grid-template-columns:90px 1fr 1fr 60px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.cmp-tier-row:last-child{border-bottom:none}
+.cmp-tier-row .lbl{font-weight:600}
+.cmp-tier-row .old{color:var(--muted);font-family:var(--mono);text-align:right}
+.cmp-tier-row .new{color:var(--navy);font-weight:700;font-family:var(--mono);text-align:right}
+.cmp-tier-row .delta{font-family:var(--mono);font-weight:700;text-align:right;font-size:11px}
+.cmp-tier-row .delta.pos{color:var(--pos)}.cmp-tier-row .delta.neg{color:var(--neg)}.cmp-tier-row .delta.neu{color:var(--muted2)}
+.cmp-list{max-height:260px;overflow-y:auto}
+.cmp-litem{padding:9px 18px;border-bottom:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cmp-litem:hover{background:var(--surface2)}
+.cmp-litem .nm{font-weight:600;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmp-litem .meta{font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.cmp-litem .chg{font-size:10px;font-family:var(--mono)}
+.cmp-empty{padding:20px;text-align:center;color:var(--muted2);font-size:12px}
+.mini-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;border:1px solid}
+.mb-oatly{background:var(--accent-soft);color:var(--accent);border-color:#bfd0ff}
+.mb-other{background:#f8fafc;color:var(--muted);border-color:var(--border)}
 </style>
 </head>
 <body>
@@ -153,6 +197,8 @@ tr:hover td{background:var(--accent-soft)}
       </div>
     </div>
     <div class="hright">
+      <button class="btn-reload" id="btnCompare" onclick="document.getElementById('compareInput').click()" style="display:none;border-color:var(--accent);color:#bfd0ff">⇄ Comparar con base antigua</button>
+      <input type="file" id="compareInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleCompareFile(this.files[0])">
       <button class="btn-reload" id="btnReload" onclick="reloadFile()" style="display:none">↩ Cambiar archivo</button>
       <div class="hcount" id="hcount" style="display:none"><span id="nShown">0</span> / <span id="nAll">0</span> cuentas</div>
     </div>
@@ -237,6 +283,23 @@ tr:hover td{background:var(--accent-soft)}
     </div>
   </div>
   <div class="footer">Oatly CRM · Dashboard comercial · datos exportados desde monday.com</div>
+</div>
+
+<!-- COMPARISON MODAL -->
+<div id="cmpOverlay" class="cmp-overlay" onclick="if(event.target===this)closeCompare()">
+  <div class="cmp-modal">
+    <div class="cmp-head">
+      <div>
+        <div class="cmp-title">Análisis de evolución</div>
+        <div class="cmp-sub" id="cmpSub">Actual vs base antigua · emparejado por nombre</div>
+      </div>
+      <button class="cmp-close" onclick="closeCompare()">✕</button>
+    </div>
+    <div class="cmp-body" id="cmpBody"></div>
+    <div class="cmp-foot">
+      <button class="btn-exp" onclick="exportCompareCSV()">⬇ Exportar cambios (CSV)</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -400,9 +463,8 @@ function normTier(t){
 }
 function clean(v){return(v===null||v===undefined||String(v).trim()===''||String(v).trim()==='n/d')?'':String(v).trim();}
 
-function processData(rows){
-  if(!rows||rows.length===0){showError('No se encontraron datos.');return;}
-  RAW=rows.map(r=>({
+function normalizeRows(rows){
+  return rows.map(r=>({
     'Name':clean(r['Name'])||'—',
     'Primary Owner':clean(r['Primary Owner']),
     'Account Type':clean(r['Account Type']),
@@ -415,6 +477,10 @@ function processData(rows){
     'Distributors/Wholesaler':clean(r['Distributors/Wholesaler']),
     'Prio':parseInt(r['Prio'])||0,
   }));
+}
+function processData(rows){
+  if(!rows||rows.length===0){showError('No se encontraron datos.');return;}
+  RAW=normalizeRows(rows);
   rebuildMultiSelect('owner',[...new Set(RAW.map(r=>r['Primary Owner']).filter(Boolean))].sort());
   rebuildMultiSelect('type',[...new Set(RAW.map(r=>r['Type']).filter(Boolean))].sort());
   rebuildMultiSelect('brand',[...new Set(RAW.map(r=>r['Current Oat Brand']).filter(Boolean))].sort());
@@ -422,6 +488,7 @@ function processData(rows){
   document.getElementById('dashboard').style.display='flex';
   document.getElementById('hcount').style.display='block';
   document.getElementById('btnReload').style.display='block';
+  document.getElementById('btnCompare').style.display='block';
   document.getElementById('nAll').textContent=RAW.length;
   fd=[...RAW];upAll();
 }
@@ -430,7 +497,9 @@ function reloadFile(){
   document.getElementById('dashboard').style.display='none';
   document.getElementById('hcount').style.display='none';
   document.getElementById('btnReload').style.display='none';
+  document.getElementById('btnCompare').style.display='none';
   document.getElementById('fileInput').value='';
+  document.getElementById('compareInput').value='';
   document.getElementById('uploadError').style.display='none';
   RAW=[];fd=[];sortCol='';sortAsc=true;
   Object.values(ch).forEach(c=>c.destroy());ch={};
@@ -581,6 +650,173 @@ function exportCSV(){
   a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'}));
   a.download='oatly_crm_cuentas.csv';a.click();
 }
+// ============ COMPARISON MODULE ============
+// "Won" mapping: monday exports usan varias etiquetas de estado ganado
+const WON_STATUSES=new Set(['Won','Active']);
+function isWon(r){return WON_STATUSES.has(r['Account Status']);}
+function brandCat(r){return r['Current Oat Brand']||'Sin marca';}
+let cmpResult=null;
+
+function handleCompareFile(file){
+  if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();const reader=new FileReader();
+  if(ext==='csv'){reader.onload=e=>runCompare(parseAnyCSV(e.target.result),file.name);reader.readAsText(file,'UTF-8');}
+  else{reader.onload=e=>runCompare(parseAnyXLSX(e.target.result),file.name);reader.readAsArrayBuffer(file);}
+  document.getElementById('compareInput').value='';
+}
+function parseAnyXLSX(buffer){
+  const wb=XLSX.read(buffer,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];
+  let data=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+  if(data.length>0&&!data[0]['Name']){
+    const d2=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false,range:2});
+    if(d2.length>0&&d2[0]['Name'])data=d2;
+  }
+  return normalizeRows(data);
+}
+function parseAnyCSV(text){
+  const lines=text.split('\n');let hi=0;
+  for(let i=0;i<Math.min(5,lines.length);i++){if(lines[i].includes('Name')&&lines[i].includes('Tier')){hi=i;break;}}
+  const headers=lines[hi].split(',').map(h=>h.replace(/"/g,'').trim());const data=[];
+  for(let i=hi+1;i<lines.length;i++){
+    if(!lines[i].trim())continue;
+    const vals=lines[i].split(',');const row={};
+    headers.forEach((h,j)=>{row[h]=(vals[j]||'').replace(/"/g,'').trim();});
+    data.push(row);
+  }
+  return normalizeRows(data);
+}
+
+function runCompare(oldData,fname){
+  if(!oldData||oldData.length===0){alert('No se pudieron leer datos del archivo antiguo.');return;}
+  // NEW = archivo actual cargado (RAW). OLD = archivo antiguo recién subido.
+  const newMap=new Map(),oldMap=new Map();let dupN=0,dupO=0;
+  RAW.forEach(r=>{if(r['Name']&&r['Name']!=='—'){if(newMap.has(r['Name']))dupN++;newMap.set(r['Name'],r);}});
+  oldData.forEach(r=>{if(r['Name']&&r['Name']!=='—'){if(oldMap.has(r['Name']))dupO++;oldMap.set(r['Name'],r);}});
+
+  const added=[],removed=[],tierChanged=[],brandChanged=[],statusChanged=[];
+  // Added: en new, no en old
+  newMap.forEach((r,name)=>{if(!oldMap.has(name))added.push(r);});
+  // Removed: en old, no en new (cafés cerrados / excluidos)
+  oldMap.forEach((r,name)=>{if(!newMap.has(name))removed.push(r);});
+  // Cambios en cuentas presentes en ambos
+  newMap.forEach((nr,name)=>{
+    const or=oldMap.get(name);if(!or)return;
+    if(nr['Tier']!==or['Tier'])tierChanged.push({name,from:or['Tier'],to:nr['Tier'],r:nr});
+    if(brandCat(nr)!==brandCat(or))brandChanged.push({name,from:brandCat(or),to:brandCat(nr),r:nr});
+    if(nr['Account Status']!==or['Account Status'])statusChanged.push({name,from:or['Account Status'],to:nr['Account Status'],r:nr});
+  });
+
+  // De las nuevas: cuántas empezaron con Oatly
+  const addedOatly=added.filter(r=>r['Current Oat Brand']==='Oatly');
+  const addedWon=added.filter(isWon);
+  // Ganancias de conversión: cambiaron A Oatly desde otra marca
+  const switchedToOatly=brandChanged.filter(c=>c.to==='Oatly'&&c.from!=='Oatly');
+  const switchedFromOatly=brandChanged.filter(c=>c.from==='Oatly'&&c.to!=='Oatly');
+  // Nuevas cuentas Won (status pasó a ganado)
+  const newlyWon=statusChanged.filter(c=>!WON_STATUSES.has(c.from)&&WON_STATUSES.has(c.to));
+  const lostWon=statusChanged.filter(c=>WON_STATUSES.has(c.from)&&!WON_STATUSES.has(c.to));
+
+  // Tier distribution old vs new
+  const tierDist=(arr)=>{const d={};arr.forEach(r=>{d[r['Tier']]=(d[r['Tier']]||0)+1;});return d;};
+  const oldTiers=tierDist([...oldMap.values()]),newTiers=tierDist([...newMap.values()]);
+  // Oatly count old vs new
+  const oatlyOld=[...oldMap.values()].filter(r=>r['Current Oat Brand']==='Oatly').length;
+  const oatlyNew=[...newMap.values()].filter(r=>r['Current Oat Brand']==='Oatly').length;
+  const wonOld=[...oldMap.values()].filter(isWon).length;
+  const wonNew=[...newMap.values()].filter(isWon).length;
+
+  cmpResult={oldName:fname,oldTotal:oldMap.size,newTotal:newMap.size,dupN,dupO,
+    added,removed,tierChanged,brandChanged,statusChanged,
+    addedOatly,addedWon,switchedToOatly,switchedFromOatly,newlyWon,lostWon,
+    oldTiers,newTiers,oatlyOld,oatlyNew,wonOld,wonNew};
+  renderCompare();
+  document.getElementById('cmpOverlay').classList.add('open');
+}
+
+function pctStr(n){return(n>=0?'+':'')+n+'%';}
+function deltaClass(n){return n>0?'pos':n<0?'neg':'neu';}
+function kpiClass(n){return n>0?'up':n<0?'down':'neutral';}
+
+function renderCompare(){
+  const c=cmpResult;
+  const dupNote=(c.dupN||c.dupO)?` · ⚠ ${c.dupN+c.dupO} nombres duplicados colapsados`:'';
+  document.getElementById('cmpSub').textContent=`Actual (${c.newTotal}) vs "${c.oldName}" (${c.oldTotal}) · nombre exacto${dupNote}`;
+  const dTotal=c.newTotal-c.oldTotal;
+  const dOatly=c.oatlyNew-c.oatlyOld;
+  const dWon=c.wonNew-c.wonOld;
+  const oatlyOldPct=c.oldTotal?Math.round(c.oatlyOld/c.oldTotal*100):0;
+  const oatlyNewPct=c.newTotal?Math.round(c.oatlyNew/c.newTotal*100):0;
+  const dOatlyPct=oatlyNewPct-oatlyOldPct;
+
+  let html='';
+  // KPI row
+  html+=`<div class="cmp-kpis">
+    <div class="cmp-kpi ${kpiClass(dTotal)}"><div class="cmp-kl">Cuentas totales</div><div class="cmp-kv">${c.newTotal}</div><div class="cmp-kd ${deltaClass(dTotal)}">${dTotal>=0?'+':''}${dTotal} vs ${c.oldTotal}</div></div>
+    <div class="cmp-kpi ${kpiClass(c.added.length)}"><div class="cmp-kl">Cuentas añadidas</div><div class="cmp-kv">${c.added.length}</div><div class="cmp-kd pos">${c.addedOatly.length} empezaron con Oatly</div></div>
+    <div class="cmp-kpi ${kpiClass(-c.removed.length)}"><div class="cmp-kl">Cuentas excluidas</div><div class="cmp-kv">${c.removed.length}</div><div class="cmp-kd neg">cerradas / eliminadas</div></div>
+    <div class="cmp-kpi ${kpiClass(dOatly)}"><div class="cmp-kl">Oatly % (universo)</div><div class="cmp-kv">${oatlyNewPct}%</div><div class="cmp-kd ${deltaClass(dOatlyPct)}">${pctStr(dOatlyPct)} pts vs ${oatlyOldPct}%</div></div>
+  </div>`;
+
+  // Conversion row
+  html+=`<div class="cmp-kpis">
+    <div class="cmp-kpi ${kpiClass(c.switchedToOatly.length)}"><div class="cmp-kl">Ganadas a Oatly</div><div class="cmp-kv">${c.switchedToOatly.length}</div><div class="cmp-kd pos">cambiaron desde otra marca</div></div>
+    <div class="cmp-kpi ${kpiClass(-c.switchedFromOatly.length)}"><div class="cmp-kl">Perdidas de Oatly</div><div class="cmp-kv">${c.switchedFromOatly.length}</div><div class="cmp-kd neg">se fueron a otra marca</div></div>
+    <div class="cmp-kpi ${kpiClass(dWon)}"><div class="cmp-kl">Cuentas Won</div><div class="cmp-kv">${c.wonNew}</div><div class="cmp-kd ${deltaClass(dWon)}">${dWon>=0?'+':''}${dWon} vs ${c.wonOld}</div></div>
+    <div class="cmp-kpi ${kpiClass(c.newlyWon.length)}"><div class="cmp-kl">Nuevas Won / perdidas</div><div class="cmp-kv">${c.newlyWon.length} / ${c.lostWon.length}</div><div class="cmp-kd neu">ganadas / caídas de Won</div></div>
+  </div>`;
+
+  // Tier evolution
+  const allTiers=['Platinum','Gold','Silver','Bronze','White Whale','Trend','Other'];
+  let tierRows='';
+  allTiers.forEach(t=>{
+    const o=c.oldTiers[t]||0,n=c.newTiers[t]||0,d=n-o;
+    if(o===0&&n===0)return;
+    tierRows+=`<div class="cmp-tier-row"><span class="lbl">${t}</span><span class="old">${o}</span><span class="new">${n}</span><span class="delta ${deltaClass(d)}">${d>=0?'+':''}${d}</span></div>`;
+  });
+  html+=`<div class="cmp-section"><div class="cmp-sh"><span>Evolución por Tier</span><span style="font-size:9px;color:var(--muted);font-weight:500">ANTIGUO → ACTUAL → Δ</span></div><div class="cmp-tierwrap">${tierRows}</div></div>`;
+
+  // Two columns: added + removed
+  html+=`<div class="cmp-grid2">
+    <div class="cmp-section">
+      <div class="cmp-sh"><span>Cuentas añadidas</span><span class="cnt">${c.added.length}</span></div>
+      <div class="cmp-list">${c.added.length?c.added.map(r=>`<div class="cmp-litem"><span class="nm" title="${r['Name']}">${r['Name']}</span><span class="meta">${r['Tier']} · ${r['City']||'—'} <span class="mini-badge ${r['Current Oat Brand']==='Oatly'?'mb-oatly':'mb-other'}">${brandCat(r)}</span></span></div>`).join(''):'<div class="cmp-empty">Sin cuentas nuevas</div>'}</div>
+    </div>
+    <div class="cmp-section">
+      <div class="cmp-sh"><span>Cuentas excluidas / cerradas</span><span class="cnt">${c.removed.length}</span></div>
+      <div class="cmp-list">${c.removed.length?c.removed.map(r=>`<div class="cmp-litem"><span class="nm" title="${r['Name']}">${r['Name']}</span><span class="meta">${r['Tier']} · ${r['City']||'—'} <span class="mini-badge ${r['Current Oat Brand']==='Oatly'?'mb-oatly':'mb-other'}">${brandCat(r)}</span></span></div>`).join(''):'<div class="cmp-empty">Sin cuentas excluidas</div>'}</div>
+    </div>
+  </div>`;
+
+  // Brand changes + tier changes
+  html+=`<div class="cmp-grid2">
+    <div class="cmp-section">
+      <div class="cmp-sh"><span>Cambios de marca</span><span class="cnt">${c.brandChanged.length}</span></div>
+      <div class="cmp-list">${c.brandChanged.length?c.brandChanged.map(x=>`<div class="cmp-litem"><span class="nm" title="${x.name}">${x.name}</span><span class="chg"><span style="color:var(--muted)">${x.from}</span> → <span style="color:${x.to==='Oatly'?'var(--accent)':'var(--navy)'};font-weight:700">${x.to}</span></span></div>`).join(''):'<div class="cmp-empty">Sin cambios de marca</div>'}</div>
+    </div>
+    <div class="cmp-section">
+      <div class="cmp-sh"><span>Cambios de tier</span><span class="cnt">${c.tierChanged.length}</span></div>
+      <div class="cmp-list">${c.tierChanged.length?c.tierChanged.map(x=>{const up=(TO[x.to]??9)<(TO[x.from]??9);return `<div class="cmp-litem"><span class="nm" title="${x.name}">${x.name}</span><span class="chg"><span style="color:var(--muted)">${x.from}</span> → <span style="color:${up?'var(--pos)':'var(--neg)'};font-weight:700">${x.to}</span> ${up?'▲':'▼'}</span></div>`;}).join(''):'<div class="cmp-empty">Sin cambios de tier</div>'}</div>
+    </div>
+  </div>`;
+
+  document.getElementById('cmpBody').innerHTML=html;
+}
+
+function closeCompare(){document.getElementById('cmpOverlay').classList.remove('open');}
+
+function exportCompareCSV(){
+  if(!cmpResult)return;const c=cmpResult;const rows=[['Categoría','Cuenta','Detalle_1','Detalle_2','Tier','Ciudad','Marca'].join(',')];
+  const esc=v=>`"${String(v||'').replace(/"/g,"'")}"`;
+  c.added.forEach(r=>rows.push(['Añadida',esc(r['Name']),'','',r['Tier'],esc(r['City']),esc(brandCat(r))].join(',')));
+  c.removed.forEach(r=>rows.push(['Excluida',esc(r['Name']),'','',r['Tier'],esc(r['City']),esc(brandCat(r))].join(',')));
+  c.brandChanged.forEach(x=>rows.push(['Cambio marca',esc(x.name),esc(x.from),esc(x.to),x.r['Tier'],esc(x.r['City']),''].join(',')));
+  c.tierChanged.forEach(x=>rows.push(['Cambio tier',esc(x.name),esc(x.from),esc(x.to),'',esc(x.r['City']),esc(brandCat(x.r))].join(',')));
+  c.statusChanged.forEach(x=>rows.push(['Cambio status',esc(x.name),esc(x.from),esc(x.to),x.r['Tier'],esc(x.r['City']),esc(brandCat(x.r))].join(',')));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download='oatly_crm_evolucion.csv';a.click();
+}
+
 document.addEventListener('DOMContentLoaded',initFilters);
 </script>
 </body>
