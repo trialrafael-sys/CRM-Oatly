@@ -140,6 +140,21 @@ tr:hover td{background:var(--accent-soft)}
 .tfooter{padding:9px 18px;font-size:10px;color:var(--muted);border-top:1px solid var(--border);font-family:var(--mono);background:var(--surface2)}
 .footer{padding:16px 32px;text-align:center;color:var(--muted2);font-size:11px;border-top:1px solid var(--border);letter-spacing:.02em}
 
+/* MATRIX */
+.mx-wrap{overflow-x:auto}
+.mx{width:100%;border-collapse:collapse;font-size:12px}
+.mx th{background:var(--surface2);color:var(--muted);font-weight:700;text-transform:uppercase;font-size:9px;letter-spacing:.05em;padding:8px 11px;border-bottom:2px solid var(--border2);text-align:right;position:static;cursor:default;white-space:nowrap}
+.mx th:hover{color:var(--muted)}
+.mx th:first-child{text-align:left}
+.mx td{padding:7px 11px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);white-space:nowrap}
+.mx td:first-child{text-align:left;font-family:var(--ui);font-weight:600;color:var(--navy)}
+.mx .cell{border-radius:4px;display:inline-block;min-width:34px;padding:2px 7px;font-weight:700}
+.mx .zero{color:var(--muted2)}
+.mx tr.total-row td{border-top:2px solid var(--border2);font-weight:700;color:var(--navy);background:var(--surface2)}
+.mx td.total-col{font-weight:700;color:var(--navy);background:var(--surface2)}
+.mx tr:hover td{background:var(--accent-soft)}
+.mx tr.total-row:hover td{background:var(--surface2)}
+
 /* COMPARE MODAL */
 .cmp-overlay{display:none;position:fixed;inset:0;background:rgba(15,40,72,.55);z-index:500;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;backdrop-filter:blur(2px)}
 .cmp-overlay.open{display:flex}
@@ -258,6 +273,7 @@ tr:hover td{background:var(--accent-soft)}
       <div class="cc"><div class="ct">Marca de avena actual <em>Análisis competitivo</em></div><div id="brandBars" class="bbars"></div></div>
       <div class="cc"><div class="ct">Rendimiento por Owner <em>Scoreboard</em></div><div id="ownerGrid" class="ogrid"></div></div>
     </div>
+    <div class="cc"><div class="ct">Matriz Marca × Tier <em>Nº de cuentas por cruce</em></div><div class="mx-wrap"><table class="mx" id="mxTable"></table></div></div>
     <div class="tc">
       <div class="thead2">
         <h3>Detalle de cuentas</h3>
@@ -535,7 +551,7 @@ function resetAll(){
   applyFilters();
 }
 
-function upAll(){document.getElementById('nShown').textContent=fd.length;upKPI();upCharts();upBrands();upOwners();upTable();}
+function upAll(){document.getElementById('nShown').textContent=fd.length;upKPI();upCharts();upBrands();upOwners();upMatrix();upTable();}
 function upKPI(){
   const n=fd.length;
   const won=fd.filter(r=>r['Account Status']==='Won').length;
@@ -596,6 +612,40 @@ function upBrands(){
     return `<div class="brow"><div class="bname" title="${br}">${br}</div><div class="bwrap"><div class="bbar" style="width:${pct}%;background:${col}"><span class="bn" style="color:#fff">${n}</span></div></div></div>`;
   }).join('');
 }
+function upMatrix(){
+  const TIERS=['Platinum','Gold','Silver','Bronze','White Whale','Trend','Other'];
+  // filas = marcas presentes en el filtro (vacíos = Sin marca), ordenadas por total desc
+  const counts={},rowTotals={},colTotals={};let grand=0;
+  fd.forEach(r=>{
+    const b=brandCat(r),t=r['Tier']||'Other';
+    counts[b]=counts[b]||{};
+    counts[b][t]=(counts[b][t]||0)+1;
+    rowTotals[b]=(rowTotals[b]||0)+1;
+    colTotals[t]=(colTotals[t]||0)+1;
+    grand++;
+  });
+  const brands=Object.keys(rowTotals).sort((a,b)=>rowTotals[b]-rowTotals[a]);
+  const tiers=TIERS.filter(t=>colTotals[t]>0);
+  // máximo de celda para escala de color
+  let mx=0;brands.forEach(b=>tiers.forEach(t=>{mx=Math.max(mx,counts[b]?.[t]||0);}));
+  const cellBg=v=>{
+    if(v===0)return '';
+    const a=Math.max(.06,Math.min(.85,v/mx));
+    return `background:rgba(29,78,216,${a.toFixed(2)});color:${a>.45?'#fff':'var(--navy)'}`;
+  };
+  let html='<thead><tr><th>Marca</th>'+tiers.map(t=>`<th>${t}</th>`).join('')+'<th>Total</th></tr></thead><tbody>';
+  brands.forEach(b=>{
+    html+=`<tr><td title="${b}">${b}</td>`;
+    tiers.forEach(t=>{
+      const v=counts[b]?.[t]||0;
+      html+=`<td>${v===0?'<span class="zero">·</span>':`<span class="cell" style="${cellBg(v)}">${v}</span>`}</td>`;
+    });
+    html+=`<td class="total-col">${rowTotals[b]}</td></tr>`;
+  });
+  html+=`<tr class="total-row"><td>Total</td>${tiers.map(t=>`<td>${colTotals[t]||0}</td>`).join('')}<td class="total-col">${grand}</td></tr></tbody>`;
+  document.getElementById('mxTable').innerHTML=html;
+}
+
 function upOwners(){
   const os={};
   fd.forEach(r=>{const o=r['Primary Owner'];if(!o)return;
