@@ -810,6 +810,18 @@ const MAP_CONFIG={
     "Alentejo":{"x":54,"y":230,"country":"PT"},
     "Algarve":{"x":40,"y":262,"country":"PT"}
   },
+  // Zonas contorneadas: PT en bandas horizontales (por coordenada y), ES por nombre
+  "zonesPT":[
+    {"name":"NORTE","y1":70,"y2":132,"lx":42,"ly":100},
+    {"name":"CENTRO","y1":132,"y2":183,"lx":44,"ly":158},
+    {"name":"LISBOA","y1":183,"y2":220,"lx":36,"ly":202},
+    {"name":"ALENTEJO","y1":220,"y2":252,"lx":40,"ly":236},
+    {"name":"ALGARVE","y1":252,"y2":268,"lx":40,"ly":261}
+  ],
+  "zonesES":[
+    {"name":"CATALUNYA","poly":"M302,50 L385,58 L352,106 L316,112 L298,82 Z","lx":338,"ly":86},
+    {"name":"MADRID","poly":"M148,120 L198,120 L198,160 L148,160 Z","lx":173,"ly":139}
+  ],
   "shareColors":[[20,"#e23b3b"],[40,"#f0a028"],[60,"#f2e04a"],[80,"#8fc93a"],[101,"#2f9e44"]]
 };
 const MAP_PATHS={
@@ -851,62 +863,83 @@ function genMapPNG(){
   const countries=new Set();
   regs.forEach(rg=>{const cfg=MAP_CONFIG.regions[rg];if(cfg)countries.add(cfg.country);});
   const hasES=countries.has('ES'),hasPT=countries.has('PT');
-  let vb='0 0 400 340',mapW=340;
-  if(hasPT&&!hasES){vb='-14 60 120 230';mapW=210;}
-  const maxN=Math.max(...regs.map(rg=>stats[rg].n));
-  const withCoords=regs.filter(rg=>MAP_CONFIG.regions[rg]).sort((a,b)=>stats[b].n-stats[a].n);
+  let vb='0 0 400 340',mapW=430;
+  if(hasPT&&!hasES){vb='-14 58 120 216';mapW=250;}
 
-  // Burbujas: número DENTRO si cabe; sin etiquetas externas (todo el detalle va al ranking lateral)
-  let bubbles='';
-  withCoords.forEach(rg=>{
-    const c=MAP_CONFIG.regions[rg],s=stats[rg];
-    const oatlyPct=s.n?Math.round(s.oatly/s.n*100):0;
-    const r=6+16*Math.sqrt(s.n/maxN);
-    const col=shareColor(oatlyPct);
-    bubbles+=`<circle cx="${c.x}" cy="${c.y}" r="${r.toFixed(1)}" fill="${col}" stroke="#fff" stroke-width="1.6" opacity="0.93"/>`;
-    if(r>=11){
-      const fs=r>=18?13:9;
-      bubbles+=`<text x="${c.x}" y="${c.y+fs*0.36}" text-anchor="middle" font-family="Girdo Black Pro" font-size="${fs}" fill="#fff">${s.n}</text>`;
+  // Agregar regiones a zonas
+  const zoneStats={};const coordless=[];
+  regs.forEach(rg=>{
+    const cfg=MAP_CONFIG.regions[rg];
+    if(!cfg){coordless.push(rg);return;}
+    let zname=null;
+    if(cfg.country==='PT'){
+      const z=MAP_CONFIG.zonesPT.find(z=>cfg.y>=z.y1&&cfg.y<z.y2);
+      zname=z?'PT:'+z.name:null;
+    }else{
+      const z=MAP_CONFIG.zonesES.find(z=>z.name===rg.toUpperCase());
+      zname=z?'ES:'+z.name:null;
     }
+    if(!zname){coordless.push(rg);return;}
+    if(!zoneStats[zname])zoneStats[zname]={n:0,oatly:0,cities:[]};
+    zoneStats[zname].n+=stats[rg].n;
+    zoneStats[zname].oatly+=stats[rg].oatly;
+    zoneStats[zname].cities.push(cfg);
   });
-  let paths='';
-  if(hasES)paths+=`<path d="${MAP_PATHS.ES}" fill="#d4d7da" stroke="#fff" stroke-width="1.5"/><path d="${MAP_PATHS.ES_BALEARES}" fill="#d4d7da" stroke="#fff" stroke-width="1"/>`;
-  if(hasPT)paths+=`<path d="${MAP_PATHS.PT}" fill="${hasES?'#c3c7cb':'#d4d7da'}" stroke="#fff" stroke-width="1.5"/>`;
 
-  // Ranking lateral: TODAS las regiones (con y sin coordenadas), orden desc
-  const allSorted=regs.sort((a,b)=>stats[b].n-stats[a].n);
-  let list='<div style="display:grid;grid-template-columns:10px auto max-content max-content max-content;column-gap:8px;row-gap:3px;align-items:center">';
-  list+=`<span></span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111">ZONA</span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111;text-align:right">CAFÉS</span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111;text-align:right">%</span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111;text-align:right">OATLY</span>`;
-  allSorted.forEach(rg=>{
-    const s=stats[rg];
-    const pctTotal=Math.round(s.n/total*100);
-    const oatlyPct=s.n?Math.round(s.oatly/s.n*100):0;
-    const col=shareColor(oatlyPct);
-    const noCoord=!MAP_CONFIG.regions[rg];
-    const big=s.n/maxN>0.3;
-    const nameStyle=big?"font-family:'Girdo Black Pro';font-size:11px":"font-family:'Margo Pro';font-size:10px";
-    list+=`<span style="width:9px;height:9px;border-radius:50%;background:${col};display:inline-block"></span>`;
-    list+=`<span style="${nameStyle};color:#111;white-space:nowrap">${rg}${noCoord?' *':''}</span>`;
-    list+=`<span style="font-family:'Girdo Black Pro';font-size:${big?12:10}px;color:#111;text-align:right">${s.n}</span>`;
-    list+=`<span style="font-family:'Margo Pro';font-size:10px;color:#333;text-align:right">${pctTotal}%</span>`;
-    list+=`<span style="font-family:'Margo Pro';font-size:10px;color:#333;text-align:right">${oatlyPct}%</span>`;
+  let svg='';
+  // País base
+  if(hasES)svg+=`<path d="${MAP_PATHS.ES}" fill="#dcdfe2" stroke="#fff" stroke-width="1.5"/><path d="${MAP_PATHS.ES_BALEARES}" fill="#dcdfe2" stroke="#fff" stroke-width="1"/>`;
+  if(hasPT)svg+=`<path d="${MAP_PATHS.PT}" fill="#dcdfe2" stroke="#fff" stroke-width="1.5"/>`;
+  // Zonas PT: bandas clipadas a la silueta
+  if(hasPT){
+    svg+=`<defs><clipPath id="ptc"><path d="${MAP_PATHS.PT}"/></clipPath></defs><g clip-path="url(#ptc)">`;
+    MAP_CONFIG.zonesPT.forEach(z=>{
+      const zs=zoneStats['PT:'+z.name];
+      if(zs){
+        const pct=zs.n?Math.round(zs.oatly/zs.n*100):0;
+        svg+=`<rect x="-20" y="${z.y1}" width="140" height="${z.y2-z.y1}" fill="${shareColor(pct)}" opacity="0.7"/>`;
+      }
+      svg+=`<line x1="-20" y1="${z.y1}" x2="120" y2="${z.y1}" stroke="#fff" stroke-width="1.4"/>`;
+    });
+    svg+='</g>';
+    if(hasPT)svg+=`<path d="${MAP_PATHS.PT}" fill="none" stroke="#fff" stroke-width="1.6"/>`;
+  }
+  // Zonas ES: polígonos clipados
+  if(hasES){
+    svg+=`<defs><clipPath id="esc"><path d="${MAP_PATHS.ES}"/></clipPath></defs><g clip-path="url(#esc)">`;
+    MAP_CONFIG.zonesES.forEach(z=>{
+      const zs=zoneStats['ES:'+z.name];
+      const pct=zs&&zs.n?Math.round(zs.oatly/zs.n*100):null;
+      svg+=`<path d="${z.poly}" fill="${zs?shareColor(pct):'#dcdfe2'}" opacity="${zs?'0.75':'1'}" stroke="#fff" stroke-width="1.4"/>`;
+    });
+    svg+='</g>';
+  }
+  // Puntos de ciudad (mínimos, blancos)
+  Object.values(zoneStats).forEach(zs=>{
+    zs.cities.forEach(c=>{svg+=`<circle cx="${c.x}" cy="${c.y}" r="1.6" fill="#fff" opacity="0.9"/>`;});
   });
-  list+='</div>';
-  if(allSorted.some(rg=>!MAP_CONFIG.regions[rg]))list+=`<div style="font-family:'Margo Pro';font-size:8px;color:#999;margin-top:5px">* sin posición en el mapa</div>`;
+  // Etiquetas de zona: pequeñas, dos líneas
+  const drawLabel=(name,zs,lx,ly)=>{
+    const pctTot=Math.round(zs.n/total*100);
+    const oPct=zs.n?Math.round(zs.oatly/zs.n*100):0;
+    svg+=`<text x="${lx}" y="${ly-4}" text-anchor="middle" font-family="Margo Pro" font-size="5.5" letter-spacing="0.5" fill="#111">${name}</text>`;
+    svg+=`<text x="${lx}" y="${ly+4}" text-anchor="middle" font-family="Girdo Black Pro" font-size="8" fill="#111">${zs.n} <tspan font-family="Margo Pro" font-size="6" fill="#333">(${pctTot}%)</tspan></text>`;
+    svg+=`<text x="${lx}" y="${ly+11}" text-anchor="middle" font-family="Margo Pro" font-size="5.5" fill="#333">Oatly ${oPct}%</text>`;
+  };
+  if(hasPT)MAP_CONFIG.zonesPT.forEach(z=>{const zs=zoneStats['PT:'+z.name];if(zs)drawLabel(z.name,zs,z.lx,z.ly);});
+  if(hasES)MAP_CONFIG.zonesES.forEach(z=>{const zs=zoneStats['ES:'+z.name];if(zs)drawLabel(z.name,zs,z.lx,z.ly);});
 
-  const legend=`<div style="display:flex;gap:11px;margin-top:9px;font-family:'Margo Pro';font-size:9px;color:#333;align-items:center;flex-wrap:wrap"><span style="font-family:'Girdo Black Pro';font-size:10px">PARTICIPACIÓN OATLY:</span>${MAP_CONFIG.shareColors.map(([lim,col],i)=>{const prev=i===0?0:MAP_CONFIG.shareColors[i-1][0];return `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block"></span>${prev}–${Math.min(lim,100)}%</span>`;}).join('')}</div>`;
+  const legend=`<div style="display:flex;gap:11px;margin-top:9px;font-family:'Margo Pro';font-size:9px;color:#333;align-items:center;flex-wrap:wrap"><span style="font-family:'Girdo Black Pro';font-size:10px">PARTICIPACIÓN OATLY:</span>${MAP_CONFIG.shareColors.map(([lim,col],i)=>{const prev=i===0?0:MAP_CONFIG.shareColors[i-1][0];return `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${col};display:inline-block"></span>${prev}–${Math.min(lim,100)}%</span>`;}).join('')}</div>`;
   let foot='';
-  if(noRegion)foot+=`<div style="font-family:'Margo Pro';font-size:9px;color:#888;margin-top:4px">${noRegion} cuentas sin BMD Region (no representadas)</div>`;
+  if(coordless.length)foot+=`<div style="font-family:'Margo Pro';font-size:8.5px;color:#555;margin-top:6px;max-width:520px">Otras zonas: ${coordless.map(rg=>`${rg} ${stats[rg].n} (Oatly ${stats[rg].n?Math.round(stats[rg].oatly/stats[rg].n*100):0}%)`).join(' · ')}</div>`;
+  if(noRegion)foot+=`<div style="font-family:'Margo Pro';font-size:8.5px;color:#999;margin-top:3px">${noRegion} cuentas sin BMD Region (no representadas)</div>`;
 
-  const t=`<div class="pt" style="max-width:620px">
-    <div style="font-family:'Girdo Black Pro';font-size:19px;color:#111;margin-bottom:2px">${title}</div>
-    <div style="font-family:'Margo Pro';font-size:10px;color:#555;margin-bottom:8px">${total} cuentas en el filtro · tamaño = nº de cafés · color = participación Oatly</div>
-    <div style="display:flex;gap:18px;align-items:flex-start">
-      <svg viewBox="${vb}" width="${mapW}" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">${paths}${bubbles}</svg>
-      <div style="padding-top:6px">${list}</div>
-    </div>
+  const t=`<div class="pt" style="max-width:600px">
+    <div style="font-family:'Girdo Black Pro';font-size:18px;color:#111;margin-bottom:1px">${title}</div>
+    <div style="font-family:'Margo Pro';font-size:9.5px;color:#555;margin-bottom:6px">${total} cuentas en el filtro · color de zona = participación Oatly</div>
+    <svg viewBox="${vb}" width="${mapW}" xmlns="http://www.w3.org/2000/svg">${svg}</svg>
     ${legend}${foot}
-    <div style="font-family:'Margo Pro';font-size:9px;color:#999;margin-top:8px">Font: Oatly CRM · BMD internal estimation</div>
+    <div style="font-family:'Margo Pro';font-size:8.5px;color:#999;margin-top:7px">Font: Oatly CRM · BMD internal estimation</div>
   </div>`;
 
   const pa=document.getElementById('printArea');
