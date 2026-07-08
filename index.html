@@ -396,6 +396,7 @@ function createMultiSelect(containerId,filterId,placeholder,options,searchable=f
   options.forEach(opt=>addOptionToPanel(list,filterId,opt));
   panel.appendChild(list);
   fg.appendChild(trigger);fg.appendChild(panel);
+  panel.addEventListener('click',e=>e.stopPropagation());
   trigger.addEventListener('click',e=>{
     e.stopPropagation();closeAllPanels(filterId);
     panel.classList.toggle('open');
