@@ -312,7 +312,7 @@ tr:hover td{background:var(--accent-soft)}
       <div class="cc"><div class="ct">Marca de avena actual <em>Análisis competitivo</em></div><div id="brandBars" class="bbars"></div></div>
       <div class="cc"><div class="ct">Rendimiento por Owner <em>Scoreboard</em></div><div id="ownerGrid" class="ogrid"></div></div>
     </div>
-    <div class="cc"><div class="ct"><span>Matriz Marca × Tier <em>Nº de cuentas por cruce</em></span><button class="btn-gen" onclick="openGen()">📷 GENERAR GRÁFICO</button></div><div class="mx-wrap"><table class="mx" id="mxTable"></table></div><div class="mx-note">* White Whale y Trend se consolidan en Platinum; el tier Other en Bronze. Las marcas "Other", "Sin marca" (celdas vacías) y las de menos de 5 cuentas se agrupan en OTRAS. Regla editable en <b>MATRIX_CONFIG</b> (JSON al inicio del script de este archivo).</div></div>
+    <div class="cc"><div class="ct"><span>Matriz Marca × Tier <em>Nº de cuentas por cruce</em></span><span style="display:flex;gap:8px"><button class="btn-gen" onclick="openMapGen()">🗺 GENERAR MAPA</button><button class="btn-gen" onclick="openGen()">📷 GENERAR GRÁFICO</button></span></div><div class="mx-wrap"><table class="mx" id="mxTable"></table></div><div class="mx-note">* White Whale y Trend se consolidan en Platinum; el tier Other en Bronze. Las marcas "Other", "Sin marca" (celdas vacías) y las de menos de 5 cuentas se agrupan en OTRAS. Regla editable en <b>MATRIX_CONFIG</b> (JSON al inicio del script de este archivo).</div></div>
 
 <!-- GENERATE PNG MODAL -->
 <div id="genOverlay" class="cmp-overlay" onclick="if(event.target===this)closeGen()">
@@ -791,6 +791,123 @@ function exportCSV(){
 const WON_STATUSES=new Set(['Won','Active']);
 function isWon(r){return WON_STATUSES.has(r['Account Status']);}
 function brandCat(r){return r['Current Oat Brand']||'Sin marca';}
+// ============ MAP_CONFIG (JSON editable) ============
+// Coordenadas x,y de cada BMD Region sobre la proyección del mapa (viewBox 0 0 400 340)
+// y país al que pertenece. Añade aquí nuevas regiones si aparecen en los datos.
+const MAP_CONFIG={
+  "regions":{
+    "CATALUNYA":{"x":340,"y":92,"country":"ES"},
+    "MADRID":{"x":172,"y":140,"country":"ES"},
+    "Lisboa":{"x":10,"y":200,"country":"PT"},
+    "Cascais":{"x":4,"y":210,"country":"PT"},
+    "Ericeira":{"x":6,"y":190,"country":"PT"},
+    "Caldas da Rainha":{"x":12,"y":178,"country":"PT"},
+    "Porto":{"x":23,"y":108,"country":"PT"},
+    "Matosinhos":{"x":19,"y":102,"country":"PT"},
+    "Braga":{"x":31,"y":89,"country":"PT"},
+    "Viana":{"x":21,"y":81,"country":"PT"},
+    "Coimbra":{"x":30,"y":158,"country":"PT"},
+    "Alentejo":{"x":54,"y":230,"country":"PT"},
+    "Algarve":{"x":40,"y":262,"country":"PT"}
+  },
+  "shareColors":[[20,"#e23b3b"],[40,"#f0a028"],[60,"#f2e04a"],[80,"#8fc93a"],[101,"#2f9e44"]]
+};
+const MAP_PATHS={
+  "ES":"M6,19 L75,11 L150,15 L231,23 L270,27 L330,53 L381,61 L348,103 L300,133 L276,175 L273,213 L264,243 L222,277 L153,277 L126,304 L105,296 L78,258 L63,247 L75,220 L66,171 L78,141 L81,114 L99,91 L87,80 L48,84 L39,72 L18,76 L15,53 Z",
+  "ES_BALEARES":"M362,160 a14,9 0 1,0 28,0 a14,9 0 1,0 -28,0",
+  "PT":"M18,76 L48,84 L87,80 L99,91 L81,114 L78,141 L66,171 L75,220 L63,247 L63,266 L21,266 L15,213 L3,201 L9,148 L21,110 Z"
+};
+function shareColor(pct){
+  for(const[lim,col]of MAP_CONFIG.shareColors){if(pct<lim)return col;}
+  return '#2f9e44';
+}
+
+function openMapGen(){
+  let html='<div class="gen-form">';
+  html+=`<div class="gen-row">
+    <div class="gen-field"><label>Título del mapa</label><input type="text" id="mapTitle" value="OATLY — PRESENCIA" maxlength="28" style="width:220px"></div>
+  </div>
+  <div class="gen-info">Se genera con el <b>filtro actual</b>, agrupando por BMD Region. Detecta automáticamente si los datos son de España, Portugal o ambos. Por región: nº de cafés, % del total y participación de Oatly (sobre universo de la zona). Coordenadas editables en <b>MAP_CONFIG</b>.</div>
+  <div class="gen-actions"><button class="btn-exp" onclick="genMapPNG()">🗺 Generar mapa PNG</button></div>
+  <div id="genOut" class="gen-result"></div></div>`;
+  document.getElementById('genBody').innerHTML=html;
+  document.getElementById('genOverlay').classList.add('open');
+  document.querySelector('#genOverlay .cmp-title').textContent='Generar mapa PNG';
+}
+
+function genMapPNG(){
+  const title=(document.getElementById('mapTitle').value||'OATLY').toUpperCase();
+  // Agrupar por región
+  const stats={};let noRegion=0;
+  fd.forEach(r=>{
+    const reg=r['BMD Region'];
+    if(!reg){noRegion++;return;}
+    if(!stats[reg])stats[reg]={n:0,oatly:0};
+    stats[reg].n++;
+    if(r['Current Oat Brand']==='Oatly')stats[reg].oatly++;
+  });
+  const total=fd.length;
+  const regs=Object.keys(stats);
+  if(!regs.length){alert('No hay datos con BMD Region en el filtro actual.');return;}
+  // Detectar países presentes
+  const countries=new Set();const unknownRegs=[];
+  regs.forEach(rg=>{
+    const cfg=MAP_CONFIG.regions[rg];
+    if(cfg)countries.add(cfg.country);else unknownRegs.push(rg);
+  });
+  const hasES=countries.has('ES'),hasPT=countries.has('PT');
+  // viewBox según países
+  let vb='0 0 400 340';
+  if(hasPT&&!hasES)vb='-10 60 110 230';
+  const maxN=Math.max(...regs.map(rg=>stats[rg].n));
+  // dibujar burbujas: grandes primero
+  const sorted=regs.filter(rg=>MAP_CONFIG.regions[rg]).sort((a,b)=>stats[b].n-stats[a].n);
+  let bubbles='';
+  sorted.forEach((rg,i)=>{
+    const c=MAP_CONFIG.regions[rg],s=stats[rg];
+    const pctTotal=Math.round(s.n/total*100);
+    const oatlyPct=s.n?Math.round(s.oatly/s.n*100):0;
+    const r=7+16*Math.sqrt(s.n/maxN);
+    const col=shareColor(oatlyPct);
+    const big=s.n/maxN>0.35;
+    const side=(c.x>300||i%2===1&&c.x<40)?-1:1; // etiquetas hacia dentro en bordes
+    const lx=c.x+side*(r+7);
+    const anchor=side===1?'start':'end';
+    bubbles+=`<circle cx="${c.x}" cy="${c.y}" r="${r.toFixed(1)}" fill="${col}" stroke="#9fc9dd" stroke-width="1.5" opacity="0.92"/>`;
+    bubbles+=`<text x="${lx}" y="${c.y-2}" text-anchor="${anchor}" font-family="Girdo Black Pro" font-size="${big?15:10}" fill="#111">${s.n} <tspan font-size="${big?11:8}">(${pctTotal}%)</tspan></text>`;
+    bubbles+=`<text x="${lx}" y="${c.y+(big?12:8)}" text-anchor="${anchor}" font-family="Margo Pro" font-size="${big?10:7.5}" fill="#333">Oatly ${oatlyPct}%</text>`;
+  });
+  let paths='';
+  if(hasES)paths+=`<path d="${MAP_PATHS.ES}" fill="#d4d7da" stroke="#fff" stroke-width="1.5"/><path d="${MAP_PATHS.ES_BALEARES}" fill="#d4d7da" stroke="#fff" stroke-width="1"/>`;
+  if(hasPT)paths+=`<path d="${MAP_PATHS.PT}" fill="${hasES?'#c3c7cb':'#d4d7da'}" stroke="#fff" stroke-width="1.5"/>`;
+  // pie: leyenda + regiones sin coordenadas + sin región
+  let foot='';
+  if(unknownRegs.length)foot+=`<div style="font-family:'Margo Pro';font-size:10px;color:#555;margin-top:6px">Otras zonas: ${unknownRegs.map(rg=>`${rg} ${stats[rg].n} (Oatly ${stats[rg].n?Math.round(stats[rg].oatly/stats[rg].n*100):0}%)`).join(' · ')}</div>`;
+  if(noRegion)foot+=`<div style="font-family:'Margo Pro';font-size:10px;color:#888;margin-top:3px">${noRegion} cuentas sin BMD Region (no representadas)</div>`;
+  const legend=`<div style="display:flex;gap:12px;margin-top:8px;font-family:'Margo Pro';font-size:9px;color:#333;align-items:center"><span style="font-family:'Girdo Black Pro';font-size:10px">PARTICIPACIÓN OATLY:</span>${MAP_CONFIG.shareColors.map(([lim,col],i)=>{const prev=i===0?0:MAP_CONFIG.shareColors[i-1][0];return `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block"></span>${prev}–${Math.min(lim,100)}%</span>`;}).join('')}</div>`;
+
+  const t=`<div class="pt" style="max-width:560px">
+    <div style="font-family:'Girdo Black Pro';font-size:19px;color:#111;margin-bottom:2px">${title}</div>
+    <div style="font-family:'Margo Pro';font-size:10px;color:#555;margin-bottom:6px">${total} cuentas en el filtro · tamaño = nº de cafés · color = participación Oatly</div>
+    <svg viewBox="${vb}" width="520" xmlns="http://www.w3.org/2000/svg">${paths}${bubbles}</svg>
+    ${legend}${foot}
+    <div style="font-family:'Margo Pro';font-size:9px;color:#999;margin-top:8px">Font: Oatly CRM · BMD internal estimation</div>
+  </div>`;
+
+  const pa=document.getElementById('printArea');
+  pa.innerHTML=t;
+  html2canvas(pa.firstChild,{scale:2,backgroundColor:'#ffffff'}).then(canvas=>{
+    const out=document.getElementById('genOut');
+    out.innerHTML=`<img src="${canvas.toDataURL('image/png')}" alt="mapa">
+      <div class="gen-actions">
+        <button class="btn-exp" onclick="copyPNG()">⧉ Copiar al portapapeles</button>
+        <button class="btn-exp" style="background:var(--accent)" onclick="downloadPNG('oatly_mapa.png')">⬇ Descargar PNG</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted)">Copiar y pegar directo en Slack, mail o presentación</div>`;
+    window.__genCanvas=canvas;
+  }).catch(err=>{alert('Error generando mapa: '+err.message);});
+}
+
 let cmpResult=null,cmpOldRows=null,cmpOldName=null;
 
 // ============ PNG GENERATOR ============
@@ -816,6 +933,7 @@ function openGen(){
   html+='</div>';
   document.getElementById('genBody').innerHTML=html;
   document.getElementById('genOverlay').classList.add('open');
+  document.querySelector('#genOverlay .cmp-title').textContent='Generar gráfico PNG';
 }
 function closeGen(){document.getElementById('genOverlay').classList.remove('open');}
 
@@ -892,11 +1010,11 @@ function copyPNG(){
       .catch(()=>alert('Tu navegador no permite copiar imágenes; usa Descargar PNG.'));
   });
 }
-function downloadPNG(){
+function downloadPNG(fname){
   if(!window.__genCanvas)return;
   const a=document.createElement('a');
   a.href=window.__genCanvas.toDataURL('image/png');
-  a.download='oatly_matriz_marca_tier.png';a.click();
+  a.download=fname||'oatly_matriz_marca_tier.png';a.click();
 }
 
 function handleCompareFile(file){
