@@ -287,6 +287,7 @@ tr:hover td{background:var(--accent-soft)}
     <div class="fg" id="fg-type"><div class="fl">Tipo</div></div>
     <div class="fg" id="fg-brand"><div class="fl">Marca</div></div>
     <div class="fg" id="fg-canal"><div class="fl">Canal</div></div>
+    <div class="fg" id="fg-city"><div class="fl">Ciudad</div></div>
     <div class="fg" id="fg-prio"><div class="fl">Prioridad</div></div>
     <div class="fg" id="fg-litros"><div class="fl">Litros</div></div>
     <button class="btn-r" onclick="resetAll()">✕ Reset</button>
@@ -480,6 +481,7 @@ function initFilters(){
     ['fg-type','type','Todos los tipos',[],true],
     ['fg-brand','brand','Todas las marcas',[],true],
     ['fg-canal','canal','Todos los canales',['BMD','FOOD SERVICE']],
+    ['fg-city','city','Todas las ciudades',[],true],
     ['fg-prio','prio','Todas las prios',['1','2']],
     ['fg-litros','litros','Todos',['Con datos registrados']],
   ];
@@ -552,6 +554,7 @@ function processData(rows){
   rebuildMultiSelect('owner',[...new Set(RAW.map(r=>r['Primary Owner']).filter(Boolean))].sort());
   rebuildMultiSelect('type',[...new Set(RAW.map(r=>r['Type']).filter(Boolean))].sort());
   rebuildMultiSelect('brand',[...new Set(RAW.map(r=>r['Current Oat Brand']).filter(Boolean))].sort());
+  rebuildMultiSelect('city',[...new Set(RAW.map(r=>r['City']).filter(Boolean))].sort());
   document.getElementById('uploadZone').style.display='none';
   document.getElementById('dashboard').style.display='flex';
   document.getElementById('hcount').style.display='block';
@@ -592,6 +595,7 @@ function applyFilters(){
     if(!passes(r,'brand','Current Oat Brand'))return false;
     if(!passes(r,'canal','Account Type'))return false;
     if(!passes(r,'prio','Prio'))return false;
+    if(!passes(r,'city','City'))return false;
     if(!passes(r,'litros',null))return false;
     return true;
   });
@@ -599,7 +603,7 @@ function applyFilters(){
 }
 function resetAll(){
   document.getElementById('fs').value='';
-  ['owner','tier','status','type','brand','canal','prio','litros'].forEach(resetMultiSelect);
+  ['owner','tier','status','type','brand','canal','city','prio','litros'].forEach(resetMultiSelect);
   applyFilters();
 }
 
