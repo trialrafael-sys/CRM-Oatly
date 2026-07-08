@@ -837,7 +837,6 @@ function openMapGen(){
 
 function genMapPNG(){
   const title=(document.getElementById('mapTitle').value||'OATLY').toUpperCase();
-  // Agrupar por región
   const stats={};let noRegion=0;
   fd.forEach(r=>{
     const reg=r['BMD Region'];
@@ -849,47 +848,63 @@ function genMapPNG(){
   const total=fd.length;
   const regs=Object.keys(stats);
   if(!regs.length){alert('No hay datos con BMD Region en el filtro actual.');return;}
-  // Detectar países presentes
-  const countries=new Set();const unknownRegs=[];
-  regs.forEach(rg=>{
-    const cfg=MAP_CONFIG.regions[rg];
-    if(cfg)countries.add(cfg.country);else unknownRegs.push(rg);
-  });
+  const countries=new Set();
+  regs.forEach(rg=>{const cfg=MAP_CONFIG.regions[rg];if(cfg)countries.add(cfg.country);});
   const hasES=countries.has('ES'),hasPT=countries.has('PT');
-  // viewBox según países
-  let vb='0 0 400 340';
-  if(hasPT&&!hasES)vb='-10 60 110 230';
+  let vb='0 0 400 340',mapW=340;
+  if(hasPT&&!hasES){vb='-14 60 120 230';mapW=210;}
   const maxN=Math.max(...regs.map(rg=>stats[rg].n));
-  // dibujar burbujas: grandes primero
-  const sorted=regs.filter(rg=>MAP_CONFIG.regions[rg]).sort((a,b)=>stats[b].n-stats[a].n);
+  const withCoords=regs.filter(rg=>MAP_CONFIG.regions[rg]).sort((a,b)=>stats[b].n-stats[a].n);
+
+  // Burbujas: número DENTRO si cabe; sin etiquetas externas (todo el detalle va al ranking lateral)
   let bubbles='';
-  sorted.forEach((rg,i)=>{
+  withCoords.forEach(rg=>{
     const c=MAP_CONFIG.regions[rg],s=stats[rg];
-    const pctTotal=Math.round(s.n/total*100);
     const oatlyPct=s.n?Math.round(s.oatly/s.n*100):0;
-    const r=7+16*Math.sqrt(s.n/maxN);
+    const r=6+16*Math.sqrt(s.n/maxN);
     const col=shareColor(oatlyPct);
-    const big=s.n/maxN>0.35;
-    const side=(c.x>300||i%2===1&&c.x<40)?-1:1; // etiquetas hacia dentro en bordes
-    const lx=c.x+side*(r+7);
-    const anchor=side===1?'start':'end';
-    bubbles+=`<circle cx="${c.x}" cy="${c.y}" r="${r.toFixed(1)}" fill="${col}" stroke="#9fc9dd" stroke-width="1.5" opacity="0.92"/>`;
-    bubbles+=`<text x="${lx}" y="${c.y-2}" text-anchor="${anchor}" font-family="Girdo Black Pro" font-size="${big?15:10}" fill="#111">${s.n} <tspan font-size="${big?11:8}">(${pctTotal}%)</tspan></text>`;
-    bubbles+=`<text x="${lx}" y="${c.y+(big?12:8)}" text-anchor="${anchor}" font-family="Margo Pro" font-size="${big?10:7.5}" fill="#333">Oatly ${oatlyPct}%</text>`;
+    bubbles+=`<circle cx="${c.x}" cy="${c.y}" r="${r.toFixed(1)}" fill="${col}" stroke="#fff" stroke-width="1.6" opacity="0.93"/>`;
+    if(r>=11){
+      const fs=r>=18?13:9;
+      bubbles+=`<text x="${c.x}" y="${c.y+fs*0.36}" text-anchor="middle" font-family="Girdo Black Pro" font-size="${fs}" fill="#fff">${s.n}</text>`;
+    }
   });
   let paths='';
   if(hasES)paths+=`<path d="${MAP_PATHS.ES}" fill="#d4d7da" stroke="#fff" stroke-width="1.5"/><path d="${MAP_PATHS.ES_BALEARES}" fill="#d4d7da" stroke="#fff" stroke-width="1"/>`;
   if(hasPT)paths+=`<path d="${MAP_PATHS.PT}" fill="${hasES?'#c3c7cb':'#d4d7da'}" stroke="#fff" stroke-width="1.5"/>`;
-  // pie: leyenda + regiones sin coordenadas + sin región
-  let foot='';
-  if(unknownRegs.length)foot+=`<div style="font-family:'Margo Pro';font-size:10px;color:#555;margin-top:6px">Otras zonas: ${unknownRegs.map(rg=>`${rg} ${stats[rg].n} (Oatly ${stats[rg].n?Math.round(stats[rg].oatly/stats[rg].n*100):0}%)`).join(' · ')}</div>`;
-  if(noRegion)foot+=`<div style="font-family:'Margo Pro';font-size:10px;color:#888;margin-top:3px">${noRegion} cuentas sin BMD Region (no representadas)</div>`;
-  const legend=`<div style="display:flex;gap:12px;margin-top:8px;font-family:'Margo Pro';font-size:9px;color:#333;align-items:center"><span style="font-family:'Girdo Black Pro';font-size:10px">PARTICIPACIÓN OATLY:</span>${MAP_CONFIG.shareColors.map(([lim,col],i)=>{const prev=i===0?0:MAP_CONFIG.shareColors[i-1][0];return `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block"></span>${prev}–${Math.min(lim,100)}%</span>`;}).join('')}</div>`;
 
-  const t=`<div class="pt" style="max-width:560px">
+  // Ranking lateral: TODAS las regiones (con y sin coordenadas), orden desc
+  const allSorted=regs.sort((a,b)=>stats[b].n-stats[a].n);
+  let list='<div style="display:grid;grid-template-columns:10px auto max-content max-content max-content;column-gap:8px;row-gap:3px;align-items:center">';
+  list+=`<span></span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111">ZONA</span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111;text-align:right">CAFÉS</span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111;text-align:right">%</span><span style="font-family:'Girdo Black Pro';font-size:9px;color:#111;text-align:right">OATLY</span>`;
+  allSorted.forEach(rg=>{
+    const s=stats[rg];
+    const pctTotal=Math.round(s.n/total*100);
+    const oatlyPct=s.n?Math.round(s.oatly/s.n*100):0;
+    const col=shareColor(oatlyPct);
+    const noCoord=!MAP_CONFIG.regions[rg];
+    const big=s.n/maxN>0.3;
+    const nameStyle=big?"font-family:'Girdo Black Pro';font-size:11px":"font-family:'Margo Pro';font-size:10px";
+    list+=`<span style="width:9px;height:9px;border-radius:50%;background:${col};display:inline-block"></span>`;
+    list+=`<span style="${nameStyle};color:#111;white-space:nowrap">${rg}${noCoord?' *':''}</span>`;
+    list+=`<span style="font-family:'Girdo Black Pro';font-size:${big?12:10}px;color:#111;text-align:right">${s.n}</span>`;
+    list+=`<span style="font-family:'Margo Pro';font-size:10px;color:#333;text-align:right">${pctTotal}%</span>`;
+    list+=`<span style="font-family:'Margo Pro';font-size:10px;color:#333;text-align:right">${oatlyPct}%</span>`;
+  });
+  list+='</div>';
+  if(allSorted.some(rg=>!MAP_CONFIG.regions[rg]))list+=`<div style="font-family:'Margo Pro';font-size:8px;color:#999;margin-top:5px">* sin posición en el mapa</div>`;
+
+  const legend=`<div style="display:flex;gap:11px;margin-top:9px;font-family:'Margo Pro';font-size:9px;color:#333;align-items:center;flex-wrap:wrap"><span style="font-family:'Girdo Black Pro';font-size:10px">PARTICIPACIÓN OATLY:</span>${MAP_CONFIG.shareColors.map(([lim,col],i)=>{const prev=i===0?0:MAP_CONFIG.shareColors[i-1][0];return `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block"></span>${prev}–${Math.min(lim,100)}%</span>`;}).join('')}</div>`;
+  let foot='';
+  if(noRegion)foot+=`<div style="font-family:'Margo Pro';font-size:9px;color:#888;margin-top:4px">${noRegion} cuentas sin BMD Region (no representadas)</div>`;
+
+  const t=`<div class="pt" style="max-width:620px">
     <div style="font-family:'Girdo Black Pro';font-size:19px;color:#111;margin-bottom:2px">${title}</div>
-    <div style="font-family:'Margo Pro';font-size:10px;color:#555;margin-bottom:6px">${total} cuentas en el filtro · tamaño = nº de cafés · color = participación Oatly</div>
-    <svg viewBox="${vb}" width="520" xmlns="http://www.w3.org/2000/svg">${paths}${bubbles}</svg>
+    <div style="font-family:'Margo Pro';font-size:10px;color:#555;margin-bottom:8px">${total} cuentas en el filtro · tamaño = nº de cafés · color = participación Oatly</div>
+    <div style="display:flex;gap:18px;align-items:flex-start">
+      <svg viewBox="${vb}" width="${mapW}" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">${paths}${bubbles}</svg>
+      <div style="padding-top:6px">${list}</div>
+    </div>
     ${legend}${foot}
     <div style="font-family:'Margo Pro';font-size:9px;color:#999;margin-top:8px">Font: Oatly CRM · BMD internal estimation</div>
   </div>`;
