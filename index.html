@@ -311,7 +311,7 @@ tr:hover td{background:var(--accent-soft)}
       <div class="cc"><div class="ct">Marca de avena actual <em>Análisis competitivo</em></div><div id="brandBars" class="bbars"></div></div>
       <div class="cc"><div class="ct">Rendimiento por Owner <em>Scoreboard</em></div><div id="ownerGrid" class="ogrid"></div></div>
     </div>
-    <div class="cc"><div class="ct"><span>Matriz Marca × Tier <em>Nº de cuentas por cruce</em></span><button class="btn-gen" onclick="openGen()">📷 GENERAR GRÁFICO</button></div><div class="mx-wrap"><table class="mx" id="mxTable"></table></div><div class="mx-note">* White Whale y Trend se consolidan en Platinum; Other en Bronze; marcas con menos de 5 cuentas se agrupan en OTRAS. Regla editable en <b>MATRIX_CONFIG</b> (JSON al inicio del script de este archivo).</div></div>
+    <div class="cc"><div class="ct"><span>Matriz Marca × Tier <em>Nº de cuentas por cruce</em></span><button class="btn-gen" onclick="openGen()">📷 GENERAR GRÁFICO</button></div><div class="mx-wrap"><table class="mx" id="mxTable"></table></div><div class="mx-note">* White Whale y Trend se consolidan en Platinum; el tier Other en Bronze. Las marcas "Other", "Sin marca" (celdas vacías) y las de menos de 5 cuentas se agrupan en OTRAS. Regla editable en <b>MATRIX_CONFIG</b> (JSON al inicio del script de este archivo).</div></div>
 
 <!-- GENERATE PNG MODAL -->
 <div id="genOverlay" class="cmp-overlay" onclick="if(event.target===this)closeGen()">
@@ -674,15 +674,17 @@ function upBrands(){
 const MATRIX_CONFIG={
   "tierMap":{"White Whale":"Platinum","Trend":"Platinum","Other":"Bronze"},
   "tierOrder":["Platinum","Gold","Silver","Bronze"],
+  "brandMap":{"Other":"OTRAS","Sin marca":"OTRAS"},
   "minBrandTotal":5,
-  "keepSeparate":["Oatly","Unknown","Sin marca"]
+  "keepSeparate":["Oatly","Unknown","OTRAS"]
 };
 function mapTier(t){return MATRIX_CONFIG.tierMap[t]||t;}
+function mapBrand(b){return MATRIX_CONFIG.brandMap[b]||b;}
 
 function computeMatrix(rows){
   const counts={},rowTotals={},colTotals={};let grand=0;
   rows.forEach(r=>{
-    const b=brandCat(r),t=mapTier(r['Tier']||'Other');
+    const b=mapBrand(brandCat(r)),t=mapTier(r['Tier']||'Other');
     counts[b]=counts[b]||{};
     counts[b][t]=(counts[b][t]||0)+1;
     rowTotals[b]=(rowTotals[b]||0)+1;
@@ -829,15 +831,15 @@ function genPNG(){
   const hasDelta=prev!==null;
   const vsLbl=dateLbl?`vs ${dateLbl}`:'vs ant.';
 
-  let t=`<div class="pt"><table><thead><tr><th>${title}</th>`;
+  let t=`<div class="pt"><table><tr class="hdr"><th>${title}</th>`;
   m.tiers.forEach(x=>t+=`<th>${x}</th>`);
   t+='<th>Total</th><th>%</th>';
   if(hasDelta)t+=`<th>${vsLbl}</th>`;
-  t+='</tr></thead><tbody>';
+  t+='</tr>';
   m.brands.forEach(b=>{
     const pct=m.grand?Math.round(m.rowTotals[b]/m.grand*100):0;
     const hero=b==='Oatly';
-    t+=`<tr class="${hero?'hero':''}"><td>${b==='Sin marca'?'SIN MARCA':b}</td>`;
+    t+=`<tr class="${hero?'hero':''}"><td>${b}</td>`;
     m.tiers.forEach(x=>{const v=m.counts[b]?.[x]||0;t+=`<td>${v||''}</td>`;});
     t+=`<td>${m.rowTotals[b]}</td><td>${pct}%</td>`;
     if(hasDelta){
@@ -852,7 +854,7 @@ function genPNG(){
   });
   t+=`<tr class="total"><td>TOTAL</td>${m.tiers.map(x=>`<td>${m.colTotals[x]||0}</td>`).join('')}<td>${m.grand}</td><td>100%</td>`;
   if(hasDelta){const dt=m.grand-prev.__total;t+=`<td>${(dt>=0?'+':'')+dt}</td>`;}
-  t+='</tr></tbody></table></div>';
+  t+='</tr></table></div>';
 
   const pa=document.getElementById('printArea');
   pa.innerHTML=t;
